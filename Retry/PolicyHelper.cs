@@ -107,15 +107,8 @@ public static class PolicyHelper
         TimeSpan samplingDuration, int minimumThroughput, TimeSpan breakDuration) =>
         policyBuilder.AdvancedCircuitBreakerAsync(failureThreshold, samplingDuration, minimumThroughput, breakDuration, OnBreak, OnReset, OnHalfOpen);
 
-    private static bool ShouldHandle<TResult>(OneOf<TResult, NotFound, Error> of)
-    {
-        if (of.IsT0 || of.IsT1)
-        {
-            return false;
-        }
-
-        return of.AsT2.StatusCode is >= HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout;
-    }
+    private static bool ShouldHandle<TResult>(OneOf<TResult, NotFound, Error> of) =>
+        of is { IsT0: false, IsT1: false } && of.AsT2.StatusCode is >= HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout;
 
     private static void OnRetry<TResult>(DelegateResult<TResult> result, TimeSpan timeSpan, int count, Context context)
     {
