@@ -16,26 +16,17 @@ public sealed class WithRetryExternalApiClient : IExternalApiClient
     {
         _api = api;
         var configuration = options.Value.RetryAndCircuitBreakerPolicyConfiguration;
-        var getTimeAsStringHandler = PolicyHelper.GetHandler<string>(logger);
-        var getItemsHandler = PolicyHelper.GetHandler<IReadOnlyCollection<string>>(logger);
-        var getUserFullNameByIdHandler = PolicyHelper.GetHandler<OneOf<string, NotFound, Error>>(logger);
         if (configuration is null)
         {
-            var getTimeAsStringPolicy = PolicyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<string, HttpRequestException>();
-            var getItemsPolicy = PolicyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<IReadOnlyCollection<string>, HttpRequestException>();
-            var getUserFullNameByIdPolicy = PolicyHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicySimple<string>();
-            _getTimeAsStringPolicyAndHandler = new PolicyAndHandlerWrapper<string>(getTimeAsStringPolicy, getTimeAsStringHandler);
-            _getItemsPolicyAndHandler = new PolicyAndHandlerWrapper<IReadOnlyCollection<string>>(getItemsPolicy, getItemsHandler);
-            _getUserFullNameByIdPolicyAndHandler = new PolicyAndHandlerWrapper<OneOf<string, NotFound, Error>>(getUserFullNameByIdPolicy, getUserFullNameByIdHandler);
+            _getTimeAsStringPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandlerSimple<string, HttpRequestException>(logger);
+            _getItemsPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandlerSimple<IReadOnlyCollection<string>, HttpRequestException>(logger);
+            _getUserFullNameByIdPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandlerSimple<string>(logger);
         }
         else
         {
-            var getTimeAsStringPolicy = PolicyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy<string, HttpRequestException>(configuration);
-            var getItemsPolicy = PolicyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy<IReadOnlyCollection<string>, HttpRequestException>(configuration);
-            var getUserFullNameByIdPolicy = PolicyHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<string>(configuration);
-            _getTimeAsStringPolicyAndHandler = new PolicyAndHandlerWrapper<string>(getTimeAsStringPolicy, getTimeAsStringHandler);
-            _getItemsPolicyAndHandler = new PolicyAndHandlerWrapper<IReadOnlyCollection<string>>(getItemsPolicy, getItemsHandler);
-            _getUserFullNameByIdPolicyAndHandler = new PolicyAndHandlerWrapper<OneOf<string, NotFound, Error>>(getUserFullNameByIdPolicy, getUserFullNameByIdHandler);
+            _getTimeAsStringPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<string, HttpRequestException>(configuration, logger);
+            _getItemsPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<IReadOnlyCollection<string>, HttpRequestException>(configuration, logger);
+            _getUserFullNameByIdPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandler<string>(configuration, logger);
         }
     }
 
