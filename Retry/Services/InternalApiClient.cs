@@ -20,7 +20,7 @@ public sealed class InternalApiClient : IInternalApiClient
     public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
-        var response = await _policy.ExecuteAsync((fail, httpClient), static (p, token) => p.httpClient.GetAsync(string.Format(Url, p.fail ? "fail" : string.Empty), token), cancellationToken).ConfigureAwait(false);
+        var response = await _policy.ExecuteAsync((fail, httpClient), static (p, token) => p.httpClient.GetAsync(string.Format(Url, p.fail ? "fail" : string.Empty), token), null, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);

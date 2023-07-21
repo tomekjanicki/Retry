@@ -9,7 +9,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddOptions<ConfigurationSettings>().Bind(context.Configuration.GetSection(ConfigurationSettings.SectionName));
         //services.AddHostedService<ExternalApiTimeWorker>();
         services.AddHostedService<ExternalApiUserWorker>();
-        services.AddWithRetry<IExternalApiClient, ExternalApiClient>(static (api, options) => new WithRetryExternalApiClient(api, options));
+        services.AddWithRetry<IExternalApiClient, ExternalApiClient, WithRetryExternalApiClient>(static (api, options, logger) => new WithRetryExternalApiClient(api, options, logger));
         services.AddHttpClient(ExternalApiClient.Name, static (provider, client) => ConfigureClient(provider, client));
         //services.AddHostedService<InternalApiWorker>();
         //services.AddSingleton<IInternalApiClient, InternalApiClient>();
