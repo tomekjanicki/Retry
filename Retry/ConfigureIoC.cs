@@ -11,7 +11,7 @@ public static class ConfigureIoC
         services.AddOptions<ConfigurationSettings>().Bind(context.Configuration.GetSection(ConfigurationSettings.SectionName));
         //services.AddHostedService<ExternalApiTimeWorker>();
         services.AddHostedService<ExternalApiUserWorker>();
-        services.AddWithRetry<IExternalApiClient, ExternalApiClient, WithRetryExternalApiClient>(static (api, options, logger) => new WithRetryExternalApiClient(api, options, logger));
+        services.AddWithRetry<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, options, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, options, logger));
         services.AddHttpClient(ExternalApiClient.Name, static (provider, client) => ConfigureClient(provider, client));
         //services.AddHostedService<InternalApiWorker>();
         //services.AddSingleton<IInternalApiClient, InternalApiClient>();

@@ -5,14 +5,14 @@ using Retry.Extensions;
 
 namespace Retry.Services;
 
-public sealed class WithRetryExternalApiClient : IExternalApiClient
+public sealed class WithRetryAndCircuitBreakerExternalApiClient : IExternalApiClient
 {
     private readonly IExternalApiClient _api;
     private readonly PolicyAndHandlerWrapper<string> _getTimeAsStringPolicyAndHandler;
     private readonly PolicyAndHandlerWrapper<IReadOnlyCollection<string>> _getItemsPolicyAndHandler;
     private readonly PolicyAndHandlerWrapper<OneOf<string, NotFound, Error>> _getUserFullNameByIdPolicyAndHandler;
 
-    public WithRetryExternalApiClient(IExternalApiClient api, IOptions<ConfigurationSettings> options, ILogger<WithRetryExternalApiClient> logger)
+    public WithRetryAndCircuitBreakerExternalApiClient(IExternalApiClient api, IOptions<ConfigurationSettings> options, ILogger<WithRetryAndCircuitBreakerExternalApiClient> logger)
     {
         _api = api;
         var configuration = options.Value.RetryAndCircuitBreakerPolicyConfiguration;
