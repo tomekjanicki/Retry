@@ -36,11 +36,6 @@ public sealed class WithRetryExternalApiClient : IExternalApiClient
     public Task<IReadOnlyCollection<string>> GetItems(bool fail, CancellationToken cancellationToken) =>
         _getItemsPolicyAndHandler.ExecuteAsync((fail, _api), static (p, token) => p._api.GetItems(p.fail, token), cancellationToken);
 
-    public async Task<OneOf<string, NotFound, Error>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken)
-    {
-        var result = await _getUserFullNameByIdPolicyAndHandler.ExecuteAndCaptureAsync((fail, _api, id),
-            static (p, token) => p._api.GetUserFullNameById(p.id, p.fail, token), cancellationToken);
-
-        return result.HandleFailureAndSuccess();
-    }
+    public Task<OneOf<string, NotFound, Error>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken) =>
+        _getUserFullNameByIdPolicyAndHandler.ExecuteAsResult((fail, _api, id), static (p, token) => p._api.GetUserFullNameById(p.id, p.fail, token), cancellationToken);
 }
