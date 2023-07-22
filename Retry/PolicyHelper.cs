@@ -71,9 +71,9 @@ public static class PolicyHelper
     private static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicy<TResult>(
         RetryAndCircuitBreakerPolicyConfiguration configuration, PolicyBuilder<TResult> builder)
     {
-        var retryPolicy = builder.ConfigureWaitAndRetryAsync(configuration.FirstRetryDelay, configuration.RetryCount);
-        var circuitBreakerPolicy = builder.ConfigureAdvancedCircuitBreakerAsync(configuration.FailureThreshold,
-            configuration.SamplingDuration, configuration.MinimumThroughput, configuration.BreakDuration);
+        var retryPolicy = builder.ConfigureWaitAndRetryAsync(configuration.RetryPolicy.FirstRetryDelay, configuration.RetryPolicy.RetryCount);
+        var circuitBreakerPolicy = builder.ConfigureAdvancedCircuitBreakerAsync(configuration.CircuitBreakerPolicy.FailureThreshold,
+            configuration.CircuitBreakerPolicy.SamplingDuration, configuration.CircuitBreakerPolicy.MinimumThroughput, configuration.CircuitBreakerPolicy.BreakDuration);
 
         return circuitBreakerPolicy.WrapAsync(retryPolicy);
     }
