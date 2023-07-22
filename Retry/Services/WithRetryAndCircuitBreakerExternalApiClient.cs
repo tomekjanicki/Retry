@@ -18,15 +18,15 @@ public sealed class WithRetryAndCircuitBreakerExternalApiClient : IExternalApiCl
         var configuration = options.Value.RetryAndCircuitBreakerPolicyConfiguration;
         if (configuration is null)
         {
-            _getTimeAsStringPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandlerSimple<string, HttpRequestException>(logger);
-            _getItemsPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandlerSimple<IReadOnlyCollection<string>, HttpRequestException>(logger);
-            _getUserFullNameByIdPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandlerSimple<string>(logger);
+            _getTimeAsStringPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandlerSimple<string>(logger);
+            _getItemsPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandlerSimple<IReadOnlyCollection<string>>(logger);
+            _getUserFullNameByIdPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandlerSimple<string>(logger);
         }
         else
         {
-            _getTimeAsStringPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<string, HttpRequestException>(configuration, logger);
-            _getItemsPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<IReadOnlyCollection<string>, HttpRequestException>(configuration, logger);
-            _getUserFullNameByIdPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandler<string>(configuration, logger);
+            _getTimeAsStringPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandler<string>(configuration, logger);
+            _getItemsPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandler<IReadOnlyCollection<string>>(configuration, logger);
+            _getUserFullNameByIdPolicyAndHandler = PolicyAndHandlerWrapperHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandler<string>(configuration, logger);
         }
     }
 

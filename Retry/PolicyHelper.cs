@@ -4,6 +4,7 @@ using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using System.Net;
+using System.Net.Sockets;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 using Retry.Extensions;
@@ -12,38 +13,42 @@ namespace Retry;
 
 public static class PolicyHelper
 {
+    public static bool ShouldHandleTransientHttpRequestException(this HttpRequestException httpRequestException) =>
+        httpRequestException.StatusCode is not null && httpRequestException.StatusCode.Value.IsTransientHttpStatusCode()
+        || httpRequestException.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused();
+
     public static Handlers<TResult> GetHandler<TResult>(ILogger logger) => new(logger, GetBreakLogResult<TResult>(), GetRetryLogResult<TResult>());
 
     public static Action<DelegateResult<TResult>, ILogger> GetRetryLogResult<TResult>() => GetLogResult<TResult>(true);
 
     public static Action<DelegateResult<TResult>, ILogger> GetBreakLogResult<TResult>() => GetLogResult<TResult>(false);
 
-    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<TResult, TException>()
+    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<TResult, TException>(Func<TException, bool> predicate)
         where TException : Exception
     {
-        var builder = ResultHandleException<TResult, TException>();
+        var builder = ResultHandleException<TResult, TException>(predicate);
 
         return GetRetryAndCircuitBreakerExceptionAsyncPolicy(builder);
     }
 
-    public static IAsyncPolicy<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicySimple<TResult>() =>
-        GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicySimple<OneOf<TResult, NotFound, Error>, HttpRequestException>(static of => ShouldHandle(of));
+    public static IAsyncPolicy<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicySimple<TResult>() =>
+        GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicySimple<OneOf<TResult, NotFound, Error>, HttpRequestException>(static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(), static of => of.ShouldHandleTransientHttpStatusCode());
 
-    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicySimple<TResult, TException>(Func<TResult, bool> predicate)
+    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicySimple<TResult, TException>(Func<TException, bool> exceptionPredicate, Func<TResult, bool> resultPredicate)
         where TException : Exception
     {
-        var builder = ResultHandleExceptionOrResult<TResult, TException>(predicate);
+        var builder = ResultHandleExceptionOrResult(exceptionPredicate, resultPredicate);
 
         return GetRetryAndCircuitBreakerExceptionAsyncPolicy(builder);
     }
 
-    public static IAsyncPolicy<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<TResult>(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
-        GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<OneOf<TResult, NotFound, Error>, HttpRequestException>(static of => ShouldHandle(of), configuration);
+    public static IAsyncPolicy<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<TResult>(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
+        GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<OneOf<TResult, NotFound, Error>, HttpRequestException>(static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(), static of => of.ShouldHandleTransientHttpStatusCode(), configuration);
 
-    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<TResult, TException>(Func<TResult, bool> predicate, RetryAndCircuitBreakerPolicyConfiguration configuration)
+    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<TResult, TException>(Func<TException, bool> exceptionPredicate, Func<TResult, bool> resultPredicate, RetryAndCircuitBreakerPolicyConfiguration configuration)
         where TException : Exception
     {
-        var builder = ResultHandleExceptionOrResult<TResult, TException>(predicate);
+        var builder = ResultHandleExceptionOrResult(exceptionPredicate, resultPredicate);
 
         return GetRetryAndCircuitBreakerExceptionAsyncPolicy(configuration, builder);
     }
@@ -55,10 +60,10 @@ public static class PolicyHelper
         return GetRetryAndCircuitBreakerExceptionAsyncPolicy(builder);
     }
 
-    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicy<TResult, TException>(RetryAndCircuitBreakerPolicyConfiguration configuration)
+    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicy<TResult, TException>(RetryAndCircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var builder = ResultHandleException<TResult, TException>();
+        var builder = ResultHandleException<TResult, TException>(predicate);
 
         return GetRetryAndCircuitBreakerExceptionAsyncPolicy(configuration, builder);
     }
@@ -81,16 +86,16 @@ public static class PolicyHelper
         return circuitBreakerPolicy.WrapAsync(retryPolicy);
     }
 
-    private static PolicyBuilder<TResult> ResultHandleException<TResult, TException>()
+    private static PolicyBuilder<TResult> ResultHandleException<TResult, TException>(Func<TException, bool> predicate)
         where TException : Exception =>
-        Policy<TResult>.Handle<TException>();
+        Policy<TResult>.Handle(predicate);
 
-    private static PolicyBuilder<TResult> ResultHandleExceptionOrResult<TResult, TException>(Func<TResult, bool> predicate)
+    private static PolicyBuilder<TResult> ResultHandleExceptionOrResult<TResult, TException>(Func<TException, bool> exceptionPredicate, Func<TResult, bool> resultPredicate)
         where TException : Exception =>
-        Policy<TResult>.Handle<TException>().OrResult(predicate);
+        Policy<TResult>.Handle(exceptionPredicate).OrResult(resultPredicate);
 
     private static PolicyBuilder<HttpResponseMessage> HttpResponseMessageHandleHttpRequestExceptionOrTransientHttpError() =>
-        Policy<HttpResponseMessage>.Handle<HttpRequestException>().OrTransientHttpError();
+        Policy<HttpResponseMessage>.Handle<HttpRequestException>(static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused()).OrTransientHttpError();
 
     private static AsyncRetryPolicy<TResult> ConfigureWaitAndRetryAsync<TResult>(this PolicyBuilder<TResult> policyBuilder) =>
         policyBuilder.WaitAndRetryAsync(2, retryAttempt => TimeSpan.FromSeconds(retryAttempt), OnRetry);
@@ -105,8 +110,8 @@ public static class PolicyHelper
         TimeSpan samplingDuration, int minimumThroughput, TimeSpan breakDuration) =>
         policyBuilder.AdvancedCircuitBreakerAsync(failureThreshold, samplingDuration, minimumThroughput, breakDuration, OnBreak, _ => { }, () => { });
 
-    private static bool ShouldHandle<TResult>(OneOf<TResult, NotFound, Error> of) =>
-        of is { IsT0: false, IsT1: false } && of.AsT2.StatusCode is >= HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout;
+    private static bool ShouldHandleTransientHttpStatusCode<TResult>(this OneOf<TResult, NotFound, Error> of) =>
+        of is { IsT0: false, IsT1: false } && of.AsT2.StatusCode.IsTransientHttpStatusCode();
 
     private static void OnRetry<TResult>(DelegateResult<TResult> result, TimeSpan timeSpan, int count, Context context)
     {
@@ -146,6 +151,12 @@ public static class PolicyHelper
 
         logger.LogError("Error during break. {Result}", result.Result);
     }
+
+    private static bool ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(this HttpRequestException httpRequestException) =>
+        httpRequestException.StatusCode is null && httpRequestException.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionRefused };
+
+    private static bool IsTransientHttpStatusCode(this HttpStatusCode code) =>
+        code is >= HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout;
 
     public const string Handlers = "handlers";
 }
