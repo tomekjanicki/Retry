@@ -1,27 +1,25 @@
 ﻿using OneOf.Types;
 using OneOf;
 using Polly;
-using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
-using System.Net;
-using System.Net.Sockets;
-using Polly.CircuitBreaker;
-using Polly.Retry;
 using Retry.Extensions;
+using Retry.Infrastructure.Models;
 
-namespace Retry;
+namespace Retry.Infrastructure;
 
 public static class PolicyHelper
 {
-    public static bool ShouldHandleTransientHttpRequestException(this HttpRequestException httpRequestException) =>
-        httpRequestException.StatusCode is not null && httpRequestException.StatusCode.Value.IsTransientHttpStatusCode()
-        || httpRequestException.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused();
-
     public static Handlers<TResult> GetHandler<TResult>(ILogger logger) => new(logger, GetBreakLogResult<TResult>(), GetRetryLogResult<TResult>());
+
+    public static Handlers GetHandler(ILogger logger) => new(logger, GetBreakLogResult(), GetRetryLogResult());
 
     public static Action<DelegateResult<TResult>, ILogger> GetRetryLogResult<TResult>() => GetLogResult<TResult>(true);
 
+    public static Action<Exception, ILogger> GetRetryLogResult() => GetLogResult(true);
+
     public static Action<DelegateResult<TResult>, ILogger> GetBreakLogResult<TResult>() => GetLogResult<TResult>(false);
+
+    public static Action<Exception, ILogger> GetBreakLogResult() => GetLogResult(false);
 
     public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<TResult, TException>(Func<TException, bool> predicate)
         where TException : Exception
@@ -29,6 +27,30 @@ public static class PolicyHelper
         var builder = ResultHandleException<TResult, TException>(predicate);
 
         return builder.GetRetryAndCircuitBreakerAsyncPolicy();
+    }
+
+    public static IAsyncPolicy GetCircuitBreakerExceptionAsyncPolicySimple<TException>(Func<TException, bool> predicate)
+        where TException : Exception
+    {
+        var builder = HandleException(predicate);
+
+        return builder.GetCircuitBreakerAsyncPolicy();
+    }
+
+    public static IAsyncPolicy GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<TException>(Func<TException, bool> predicate)
+        where TException : Exception
+    {
+        var builder = HandleException(predicate);
+
+        return builder.GetRetryAndCircuitBreakerAsyncPolicy();
+    }
+
+    public static IAsyncPolicy<TResult> GetCircuitBreakerExceptionAsyncPolicySimple<TResult, TException>(Func<TException, bool> predicate)
+        where TException : Exception
+    {
+        var builder = ResultHandleException<TResult, TException>(predicate);
+
+        return builder.GetCircuitBreakerAsyncPolicy();
     }
 
     public static IAsyncPolicy<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicySimple<TResult>() =>
@@ -68,23 +90,33 @@ public static class PolicyHelper
         return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
     }
 
-    private static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerAsyncPolicy<TResult>(this PolicyBuilder<TResult> builder,
-        RetryAndCircuitBreakerPolicyConfiguration configuration)
+    public static IAsyncPolicy<TResult> GetCircuitBreakerExceptionAsyncPolicy<TResult, TException>(CircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
+        where TException : Exception
     {
-        var retryPolicy = builder.ConfigureWaitAndRetryAsync(configuration.RetryPolicy.FirstRetryDelay, configuration.RetryPolicy.RetryCount);
-        var circuitBreakerPolicy = builder.ConfigureAdvancedCircuitBreakerAsync(configuration.CircuitBreakerPolicy.FailureThreshold,
-            configuration.CircuitBreakerPolicy.SamplingDuration, configuration.CircuitBreakerPolicy.MinimumThroughput, configuration.CircuitBreakerPolicy.BreakDuration);
+        var builder = ResultHandleException<TResult, TException>(predicate);
 
-        return circuitBreakerPolicy.WrapAsync(retryPolicy);
+        return builder.GetCircuitBreakerAsyncPolicy(configuration);
     }
 
-    private static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerAsyncPolicy<TResult>(this PolicyBuilder<TResult> builder)
+    public static IAsyncPolicy GetCircuitBreakerExceptionAsyncPolicy<TException>(CircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
+        where TException : Exception
     {
-        var retryPolicy = builder.ConfigureWaitAndRetryAsync();
-        var circuitBreakerPolicy = builder.ConfigureCircuitBreakerAsync();
+        var builder = HandleException(predicate);
 
-        return circuitBreakerPolicy.WrapAsync(retryPolicy);
+        return builder.GetCircuitBreakerAsyncPolicy(configuration);
     }
+
+    public static IAsyncPolicy GetRetryAndCircuitBreakerExceptionAsyncPolicy<TException>(RetryAndCircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
+        where TException : Exception
+    {
+        var builder = HandleException(predicate);
+
+        return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
+    }
+
+    private static PolicyBuilder HandleException<TException>(Func<TException, bool> predicate)
+        where TException : Exception =>
+        Policy.Handle(predicate);
 
     private static PolicyBuilder<TResult> ResultHandleException<TResult, TException>(Func<TException, bool> predicate)
         where TException : Exception =>
@@ -97,66 +129,12 @@ public static class PolicyHelper
     private static PolicyBuilder<HttpResponseMessage> HttpResponseMessageHandleHttpRequestExceptionOrTransientHttpError() =>
         Policy<HttpResponseMessage>.Handle<HttpRequestException>(static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused()).OrTransientHttpError();
 
-    private static AsyncRetryPolicy<TResult> ConfigureWaitAndRetryAsync<TResult>(this PolicyBuilder<TResult> policyBuilder) =>
-        policyBuilder.WaitAndRetryAsync(2, retryAttempt => TimeSpan.FromSeconds(retryAttempt), OnRetry);
-
-    private static AsyncRetryPolicy<TResult> ConfigureWaitAndRetryAsync<TResult>(this PolicyBuilder<TResult> policyBuilder, TimeSpan firstRetryDelay, int retryCount) => 
-        policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(firstRetryDelay, retryCount), OnRetry);
-
-    private static AsyncCircuitBreakerPolicy<TResult> ConfigureCircuitBreakerAsync<TResult>(this PolicyBuilder<TResult> policyBuilder) =>
-        policyBuilder.CircuitBreakerAsync(3, TimeSpan.FromSeconds(10), OnBreak, _ => { }, () => {});
-
-    private static AsyncCircuitBreakerPolicy<TResult> ConfigureAdvancedCircuitBreakerAsync<TResult>(this PolicyBuilder<TResult> policyBuilder, double failureThreshold,
-        TimeSpan samplingDuration, int minimumThroughput, TimeSpan breakDuration) =>
-        policyBuilder.AdvancedCircuitBreakerAsync(failureThreshold, samplingDuration, minimumThroughput, breakDuration, OnBreak, _ => { }, () => { });
-
     private static bool ShouldHandleTransientHttpStatusCode<TResult>(this OneOf<TResult, NotFound, Error> of) =>
         of is { IsT0: false, IsT1: false } && of.AsT2.StatusCode.IsTransientHttpStatusCode();
 
-    private static void OnRetry<TResult>(DelegateResult<TResult> result, TimeSpan timeSpan, int count, Context context)
-    {
-        var value = context.TryGetValue<Handlers<TResult>>(Handlers);
-        value?.OnRetry(result, value.Logger);
-    }
-
-    private static void OnBreak<TResult>(DelegateResult<TResult> result, CircuitState state, TimeSpan timeSpan, Context context)
-    {
-        var value = context.TryGetValue<Handlers<TResult>>(Handlers);
-        value?.OnBrake(result, value.Logger);
-    }
-
-    private static Action<DelegateResult<TResult>, ILogger> GetLogResult<TResult>(bool retry) => 
+    private static Action<DelegateResult<TResult>, ILogger> GetLogResult<TResult>(bool retry) =>
         retry ? static (result, logger) => logger.RetryLogResult(result) : static (result, logger) => logger.BreakLogResult(result);
 
-    private static void RetryLogResult<TResult>(this ILogger logger, DelegateResult<TResult> result)
-    {
-        if (result.Exception is not null)
-        {
-            logger.LogError(result.Exception, "Exception during retry.");
-
-            return;
-        }
-
-        logger.LogError("Error during retry. {Result}", result.Result);
-    }
-
-    private static void BreakLogResult<TResult>(this ILogger logger, DelegateResult<TResult> result)
-    {
-        if (result.Exception is not null)
-        {
-            logger.LogError(result.Exception, "Exception during break.");
-
-            return;
-        }
-
-        logger.LogError("Error during break. {Result}", result.Result);
-    }
-
-    private static bool ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(this HttpRequestException httpRequestException) =>
-        httpRequestException.StatusCode is null && httpRequestException.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionRefused };
-
-    private static bool IsTransientHttpStatusCode(this HttpStatusCode code) =>
-        code is >= HttpStatusCode.InternalServerError or HttpStatusCode.RequestTimeout;
-
-    public const string Handlers = "handlers";
+    private static Action<Exception, ILogger> GetLogResult(bool retry) =>
+        retry ? static (result, logger) => logger.RetryLogResult(result) : static (result, logger) => logger.BreakLogResult(result);
 }

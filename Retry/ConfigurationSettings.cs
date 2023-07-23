@@ -1,4 +1,6 @@
-﻿namespace Retry;
+﻿using Retry.Infrastructure.Models;
+
+namespace Retry;
 
 public sealed class ConfigurationSettings
 {

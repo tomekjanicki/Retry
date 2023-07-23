@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Retry.Extensions;
+using Retry.Infrastructure;
 using Retry.Services;
 
 namespace Retry;
@@ -8,10 +9,11 @@ public static class ConfigureIoC
 {
     public static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
     {
+        services.AddSingleton<PolicyAndHandlerWrapperProvider>();
         services.AddOptions<ConfigurationSettings>().Bind(context.Configuration.GetSection(ConfigurationSettings.SectionName));
         //services.AddHostedService<ExternalApiTimeWorker>();
         services.AddHostedService<ExternalApiUserWorker>();
-        services.AddWithRetry<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, options, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, options, logger));
+        services.AddWithRetry<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, provider, logger));
         services.AddHttpClient(ExternalApiClient.Name, static (provider, client) => ConfigureClient(provider, client));
         //services.AddHostedService<InternalApiWorker>();
         //services.AddSingleton<IInternalApiClient, InternalApiClient>();

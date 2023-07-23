@@ -1,5 +1,6 @@
 ﻿using Polly;
 using Retry.Extensions;
+using Retry.Infrastructure;
 
 namespace Retry.Services;
 
