@@ -8,7 +8,7 @@ namespace Retry.Resiliency;
 
 public sealed class PolicyAndHandlerWrapperProvider
 {
-    private readonly RetryAndCircuitBreakerPolicyConfiguration? _configuration;
+    private readonly RetryAndCircuitBreakerPolicyConfiguration _configuration;
 
     public PolicyAndHandlerWrapperProvider(IOptions<ConfigurationSettings> options) =>
         _configuration = options.Value.RetryAndCircuitBreakerPolicyConfiguration;
@@ -20,9 +20,7 @@ public sealed class PolicyAndHandlerWrapperProvider
         TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = _configuration is not null ?
-            ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy<TResult, TException>(_configuration, predicate)
-            : ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicySimple<TResult, TException>(predicate);
+        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy<TResult, TException>(_configuration, predicate);
         var handler = ResiliencyHelper.GetHandler<TResult>(logger);
 
         return new AsyncPolicyAndHandlerWrapper<TResult>(policy, handler);
@@ -32,9 +30,7 @@ public sealed class PolicyAndHandlerWrapperProvider
         TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = _configuration is not null ?
-            ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicy<TResult, TException>(_configuration.CircuitBreakerPolicy, predicate)
-            : ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicySimple<TResult, TException>(predicate);
+        var policy = ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicy<TResult, TException>(_configuration.CircuitBreakerPolicy, predicate);
         var handler = ResiliencyHelper.GetHandler<TResult>(logger);
 
         return new AsyncPolicyAndHandlerWrapper<TResult>(policy, handler);
@@ -43,9 +39,7 @@ public sealed class PolicyAndHandlerWrapperProvider
     public AsyncPolicyAndHandlerWrapper GetCircuitBreakerExceptionAsyncPolicyAndHandler<TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = _configuration is not null ?
-            ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicy(_configuration.CircuitBreakerPolicy, predicate)
-            : ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicySimple(predicate);
+        var policy = ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicy(_configuration.CircuitBreakerPolicy, predicate);
         var handler = ResiliencyHelper.GetHandler(logger);
 
         return new AsyncPolicyAndHandlerWrapper(policy, handler);
@@ -54,9 +48,7 @@ public sealed class PolicyAndHandlerWrapperProvider
     public AsyncPolicyAndHandlerWrapper GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = _configuration is not null ?
-            ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy(_configuration, predicate)
-            : ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicySimple(predicate);
+        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy(_configuration, predicate);
         var handler = ResiliencyHelper.GetHandler(logger);
 
         return new AsyncPolicyAndHandlerWrapper(policy, handler);
@@ -64,8 +56,7 @@ public sealed class PolicyAndHandlerWrapperProvider
 
     public AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandler<TResult>(ILogger logger)
     {
-        var policy = _configuration is not null ? ResiliencyHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<TResult>(_configuration)
-                : ResiliencyHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicySimple<TResult>();
+        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<TResult>(_configuration);
         var handler = ResiliencyHelper.GetHandler<OneOf<TResult, NotFound, Error>>(logger);
 
         return new AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, Error>>(policy, handler);

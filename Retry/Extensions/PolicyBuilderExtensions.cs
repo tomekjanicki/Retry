@@ -35,45 +35,11 @@ public static class PolicyBuilderExtensions
         return circuitBreakerPolicy.WrapAsync(retryPolicy);
     }
 
-    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerAsyncPolicy<TResult>(this PolicyBuilder<TResult> builder)
-    {
-        var retryPolicy = builder.ConfigureWaitAndRetryAsync();
-        var circuitBreakerPolicy = builder.ConfigureCircuitBreakerAsync();
-
-        return circuitBreakerPolicy.WrapAsync(retryPolicy);
-    }
-
-    public static IAsyncPolicy GetRetryAndCircuitBreakerAsyncPolicy(this PolicyBuilder builder)
-    {
-        var retryPolicy = builder.ConfigureWaitAndRetryAsync();
-        var circuitBreakerPolicy = builder.ConfigureCircuitBreakerAsync();
-
-        return circuitBreakerPolicy.WrapAsync(retryPolicy);
-    }
-
-    public static IAsyncPolicy<TResult> GetCircuitBreakerAsyncPolicy<TResult>(this PolicyBuilder<TResult> builder) => 
-        builder.ConfigureCircuitBreakerAsync();
-
-    public static IAsyncPolicy GetCircuitBreakerAsyncPolicy(this PolicyBuilder builder) =>
-        builder.ConfigureCircuitBreakerAsync();
-
-    public static AsyncRetryPolicy<TResult> ConfigureWaitAndRetryAsync<TResult>(this PolicyBuilder<TResult> policyBuilder) =>
-        policyBuilder.WaitAndRetryAsync(2, retryAttempt => TimeSpan.FromSeconds(retryAttempt), OnRetry);
-
     public static AsyncRetryPolicy<TResult> ConfigureWaitAndRetryAsync<TResult>(this PolicyBuilder<TResult> policyBuilder, TimeSpan firstRetryDelay, int retryCount) =>
         policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(firstRetryDelay, retryCount), OnRetry);
 
-    public static AsyncRetryPolicy ConfigureWaitAndRetryAsync(this PolicyBuilder policyBuilder) =>
-        policyBuilder.WaitAndRetryAsync(2, retryAttempt => TimeSpan.FromSeconds(retryAttempt), OnRetry);
-
     public static AsyncRetryPolicy ConfigureWaitAndRetryAsync(this PolicyBuilder policyBuilder, TimeSpan firstRetryDelay, int retryCount) =>
         policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(firstRetryDelay, retryCount), OnRetry);
-
-    public static AsyncCircuitBreakerPolicy<TResult> ConfigureCircuitBreakerAsync<TResult>(this PolicyBuilder<TResult> policyBuilder) =>
-        policyBuilder.CircuitBreakerAsync(3, TimeSpan.FromSeconds(10), OnBreak, _ => { }, () => { });
-
-    public static AsyncCircuitBreakerPolicy ConfigureCircuitBreakerAsync(this PolicyBuilder policyBuilder) =>
-        policyBuilder.CircuitBreakerAsync(3, TimeSpan.FromSeconds(10), OnBreak, _ => { }, () => { });
 
     public static AsyncCircuitBreakerPolicy<TResult> ConfigureAdvancedCircuitBreakerAsync<TResult>(this PolicyBuilder<TResult> policyBuilder, double failureThreshold,
         TimeSpan samplingDuration, int minimumThroughput, TimeSpan breakDuration) =>

@@ -13,6 +13,7 @@ public static class HttpResponseMessageExtensions
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    private static readonly Error ResultNullError = new(HttpStatusCode.InternalServerError, "Returned value was null.");
 
     public static async Task<OneOf<TResult, NotFound, Error>> HandleWithNotFound<TResult, TIntermediateResult>(
         this HttpResponseMessage message, Func<TIntermediateResult, TResult> converter, CancellationToken cancellationToken)
@@ -22,12 +23,8 @@ public static class HttpResponseMessageExtensions
             case HttpStatusCode.OK:
             {
                 var result = await message.Content.ReadFromJsonAsync<TIntermediateResult>(CamelCaseJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-                if (result is null)
-                {
-                    return new Error(HttpStatusCode.InternalServerError, "Returned value was null.");
-                }
 
-                return converter(result);
+                return result is null ? ResultNullError : converter(result);
             }
             case HttpStatusCode.NotFound:
             {
