@@ -1,4 +1,4 @@
-﻿using Retry.Infrastructure;
+﻿using Retry.Resiliency;
 
 namespace Retry.Extensions;
 

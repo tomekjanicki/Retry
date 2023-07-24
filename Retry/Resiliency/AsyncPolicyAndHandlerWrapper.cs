@@ -1,8 +1,8 @@
 ﻿using Polly;
 using Retry.Extensions;
-using Retry.Infrastructure.Models;
+using Retry.Resiliency.Models;
 
-namespace Retry.Infrastructure;
+namespace Retry.Resiliency;
 
 public sealed class AsyncPolicyAndHandlerWrapper<TResult>
 {

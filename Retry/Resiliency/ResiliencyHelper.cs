@@ -1,13 +1,13 @@
-﻿using OneOf.Types;
-using OneOf;
+﻿using OneOf;
+using OneOf.Types;
 using Polly;
 using Polly.Extensions.Http;
 using Retry.Extensions;
-using Retry.Infrastructure.Models;
+using Retry.Resiliency.Models;
 
-namespace Retry.Infrastructure;
+namespace Retry.Resiliency;
 
-public static class PolicyHelper
+public static class ResiliencyHelper
 {
     public static Handlers<TResult> GetHandler<TResult>(ILogger logger) => new(logger, GetBreakLogResult<TResult>(), GetRetryLogResult<TResult>());
 

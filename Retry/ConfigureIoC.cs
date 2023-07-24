@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Retry.Extensions;
-using Retry.Infrastructure;
+using Retry.Resiliency;
 using Retry.Services;
 
 namespace Retry;

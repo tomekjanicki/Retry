@@ -1,6 +1,6 @@
 ﻿using Polly;
 
-namespace Retry.Infrastructure.Models;
+namespace Retry.Resiliency.Models;
 
 public sealed class Handlers<TResult>
 {

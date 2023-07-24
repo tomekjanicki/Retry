@@ -1,5 +1,5 @@
 ﻿using Polly;
-using Retry.Infrastructure.Models;
+using Retry.Resiliency.Models;
 
 namespace Retry.Extensions;
 

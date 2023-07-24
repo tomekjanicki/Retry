@@ -1,4 +1,4 @@
-﻿namespace Retry.Infrastructure.Models;
+﻿namespace Retry.Resiliency.Models;
 
 public sealed class CircuitBreakerPolicyConfiguration
 {

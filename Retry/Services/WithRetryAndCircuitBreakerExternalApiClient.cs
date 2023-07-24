@@ -1,7 +1,7 @@
 ﻿using OneOf;
 using OneOf.Types;
 using Retry.Extensions;
-using Retry.Infrastructure;
+using Retry.Resiliency;
 
 namespace Retry.Services;
 

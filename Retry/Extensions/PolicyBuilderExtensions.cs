@@ -2,7 +2,7 @@
 using Polly.CircuitBreaker;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Retry;
-using Retry.Infrastructure.Models;
+using Retry.Resiliency.Models;
 
 namespace Retry.Extensions;
 

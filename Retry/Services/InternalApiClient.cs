@@ -1,6 +1,6 @@
 ﻿using Polly;
 using Retry.Extensions;
-using Retry.Infrastructure;
+using Retry.Resiliency;
 
 namespace Retry.Services;
 
@@ -15,7 +15,7 @@ public sealed class InternalApiClient : IInternalApiClient
     public InternalApiClient(IHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
-        _policy = PolicyHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrTransientHttpErrorAsyncPolicySimple();
+        _policy = ResiliencyHelper.GetRetryAndCircuitBreakerHttpRequestExceptionOrTransientHttpErrorAsyncPolicySimple();
     }
 
     public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)

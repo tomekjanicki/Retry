@@ -1,6 +1,6 @@
 ﻿using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Producer;
-using Retry.Infrastructure;
+using Retry.Resiliency;
 
 namespace Retry.Services;
 
