@@ -13,7 +13,7 @@ public static class HttpResponseMessageExtensions
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    private static readonly Error ResultNullError = new(HttpStatusCode.InternalServerError, "Returned value was null.");
+    private static readonly Error ResultNullError = new(HttpStatusCode.ExpectationFailed, "Returned value was null.");
 
     public static async Task<OneOf<TResult, NotFound, Error>> HandleWithNotFound<TResult, TIntermediateResult>(
         this HttpResponseMessage message, Func<TIntermediateResult, TResult> converter, CancellationToken cancellationToken)
