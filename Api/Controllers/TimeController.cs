@@ -6,14 +6,16 @@ namespace Api.Controllers;
 [Route("[controller]")]
 public sealed class TimeController : ControllerBase
 {
+    private readonly ILogger<TimeController> _logger;
+
+    public TimeController(ILogger<TimeController> logger) => _logger = logger;
+
+
     [HttpGet]
     public IActionResult Get(string? mode)
     {
-        if (mode != "fail")
-        {
-            return Ok(DateTime.Now.ToLongTimeString());
-        }
+        _logger.LogInformation("Starting get request.");
 
-        throw new InvalidOperationException();
+        return mode != "fail" ? this.GetOkWithLogging(DateTime.Now.ToLongTimeString(), _logger, nameof(Get)) : this.GetInternalServerErrorWithLogging(_logger, nameof(Get));
     }
 }

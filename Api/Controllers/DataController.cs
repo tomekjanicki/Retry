@@ -6,14 +6,16 @@ namespace Api.Controllers;
 [Route("[controller]")]
 public sealed class DataController : ControllerBase
 {
+    private readonly ILogger<DataController> _logger;
+
+    public DataController(ILogger<DataController> logger) => 
+        _logger = logger;
+
     [HttpGet]
     public IActionResult Get(string? mode)
     {
-        if (mode != "fail")
-        {
-            return Ok(new List<string> { "1", "2" });
-        }
+        _logger.LogInformation("Starting get request.");
 
-        throw new InvalidOperationException();
+        return mode != "fail" ? this.GetOkWithLogging(new List<string> { "1", "2" }, _logger, nameof(Get)) : this.GetInternalServerErrorWithLogging(_logger, nameof(Get));
     }
 }

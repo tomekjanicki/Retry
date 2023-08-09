@@ -1,22 +1,20 @@
-﻿using System.Net;
-using OneOf;
+﻿using OneOf;
 using OneOf.Types;
+using Polly.CircuitBreaker;
 using Retry.Resiliency;
 
 namespace Retry.Extensions;
 
 public static class PolicyAndHandlerWrapperExtensions
 {
-    static PolicyAndHandlerWrapperExtensions() =>
-        CircuitBreakerOpenError = new(HttpStatusCode.ServiceUnavailable, "Circuit breaker open.");
-    public static Error CircuitBreakerOpenError { get; }
+    public static readonly Func<Exception, bool> CircuitOpenPredicate = exception => exception is BrokenCircuitException;
 
-    public static async Task<OneOf<TResult, NotFound, Error>> ExecuteAsResult<TResult, TParam>(this AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, Error>> wrapper, TParam param, Error error,
-        Func<TParam, CancellationToken, Task<OneOf<TResult, NotFound, Error>>> func, CancellationToken cancellationToken)
+    public static async Task<OneOf<TResult, NotFound, ApiError>> ExecuteAsResult<TResult, TParam>(this AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, ApiError>> wrapper, TParam param, ApiError error, Func<Exception, bool> exceptionPredicate,
+        Func<TParam, CancellationToken, Task<OneOf<TResult, NotFound, ApiError>>> func, CancellationToken cancellationToken)
         where TParam : struct
     {
         var result = await wrapper.ExecuteAndCaptureAsync(param, func, cancellationToken).ConfigureAwait(false);
 
-        return result.HandleFailureAndSuccess(error);
+        return result.HandleFailureAndSuccess(error, exceptionPredicate);
     }
 }

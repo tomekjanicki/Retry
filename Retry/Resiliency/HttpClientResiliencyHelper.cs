@@ -10,7 +10,26 @@ public static class HttpClientResiliencyHelper
         GetContext(new Handlers<HttpResponseMessage>(logger, ResiliencyHelper.GetBreakLogResult<HttpResponseMessage>(),
             ResiliencyHelper.GetRetryLogResult<HttpResponseMessage>()));
 
-    public static IAsyncPolicy<HttpResponseMessage> GetRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
+    private static readonly IDictionary<string, IAsyncPolicy<HttpResponseMessage>> Policies = new Dictionary<string, IAsyncPolicy<HttpResponseMessage>>();
+
+    public static IAsyncPolicy<HttpResponseMessage> GetSingleInstanceOfRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message)
+    {
+        var uri = message.RequestUri ?? throw new InvalidOperationException("Uri is null.");
+        var key = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+        lock (Policies)
+        {
+            if (Policies.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+            var policy = GetRetryAndCircuitBreakerAsyncPolicy(configuration);
+            Policies.Add(key, policy);
+
+            return policy;
+        }
+    }
+
+    private static IAsyncPolicy<HttpResponseMessage> GetRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
         ResiliencyHelper.GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<HttpResponseMessage, HttpRequestException>(
             static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(),
             static message => message.StatusCode.IsTransientHttpStatusCode(), configuration);

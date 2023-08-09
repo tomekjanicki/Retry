@@ -9,5 +9,5 @@ public interface IExternalApiClient
 
     Task<IReadOnlyCollection<string>> GetItems(bool fail, CancellationToken cancellationToken);
 
-    Task<OneOf<string, NotFound, Error>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken);
+    Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken);
 }

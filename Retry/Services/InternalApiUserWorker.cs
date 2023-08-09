@@ -1,11 +1,11 @@
 ﻿namespace Retry.Services;
 
-public sealed class ExternalApiUserWorker : BackgroundService
+public sealed class InternalApiUserWorker : BackgroundService
 {
-    private readonly IExternalApiClient _api;
-    private readonly ILogger<ExternalApiUserWorker> _logger;
+    private readonly IInternalApiClient _api;
+    private readonly ILogger<InternalApiUserWorker> _logger;
 
-    public ExternalApiUserWorker(IExternalApiClient api, ILogger<ExternalApiUserWorker> logger)
+    public InternalApiUserWorker(IInternalApiClient api, ILogger<InternalApiUserWorker> logger)
     {
         _api = api;
         _logger = logger;
@@ -30,7 +30,7 @@ public sealed class ExternalApiUserWorker : BackgroundService
                 {
                     _logger.LogError("Error during fetching user with {Id} {Error}.", id, error);
                 });
-                
+
                 _logger.LogInformation("End loop.");
             }
             catch (Exception e)

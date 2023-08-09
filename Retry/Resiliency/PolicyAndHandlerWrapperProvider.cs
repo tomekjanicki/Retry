@@ -54,11 +54,11 @@ public sealed class PolicyAndHandlerWrapperProvider
         return new AsyncPolicyAndHandlerWrapper(policy, handler);
     }
 
-    public AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicyAndHandler<TResult>(ILogger logger)
+    public AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, ApiError>> GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicyAndHandler<TResult>(ILogger logger)
     {
-        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<TResult>(_configuration);
-        var handler = ResiliencyHelper.GetHandler<OneOf<TResult, NotFound, Error>>(logger);
+        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicy<TResult>(_configuration);
+        var handler = ResiliencyHelper.GetHandler<OneOf<TResult, NotFound, ApiError>>(logger);
 
-        return new AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, Error>>(policy, handler);
+        return new AsyncPolicyAndHandlerWrapper<OneOf<TResult, NotFound, ApiError>>(policy, handler);
     }
 }

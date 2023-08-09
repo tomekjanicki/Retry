@@ -21,13 +21,20 @@ public static class ResiliencyHelper
     public static Action<Exception, ILogger> GetBreakLogResult() => GetLogResult(false);
 
 
-    public static IAsyncPolicy<OneOf<TResult, NotFound, Error>> GetRetryAndCircuitBreakerTransientHttpRequestExceptionOrOneOfResultWithNotFoundAsyncPolicy<TResult>(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
-        GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<OneOf<TResult, NotFound, Error>, HttpRequestException>(static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(), static of => of.ShouldHandleTransientHttpStatusCode(), configuration);
+    public static IAsyncPolicy<OneOf<TResult, NotFound, ApiError>> GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicy<TResult>(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
+        GetRetryAndCircuitBreakerResultAsyncPolicy<OneOf<TResult, NotFound, ApiError>>(static of => of.ShouldHandleTransient(), configuration);
 
     public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<TResult, TException>(Func<TException, bool> exceptionPredicate, Func<TResult, bool> resultPredicate, RetryAndCircuitBreakerPolicyConfiguration configuration)
         where TException : Exception
     {
         var builder = ResultHandleExceptionOrResult(exceptionPredicate, resultPredicate);
+
+        return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
+    }
+
+    public static IAsyncPolicy<TResult> GetRetryAndCircuitBreakerResultAsyncPolicy<TResult>(Func<TResult, bool> resultPredicate, RetryAndCircuitBreakerPolicyConfiguration configuration)
+    {
+        var builder = ResultHandleResult(resultPredicate);
 
         return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
     }
@@ -76,8 +83,11 @@ public static class ResiliencyHelper
         where TException : Exception =>
         Policy<TResult>.Handle(exceptionPredicate).OrResult(resultPredicate);
 
-    private static bool ShouldHandleTransientHttpStatusCode<TResult>(this OneOf<TResult, NotFound, Error> of) =>
-        of is { IsT0: false, IsT1: false } && of.AsT2.StatusCode.IsTransientHttpStatusCode();
+    private static PolicyBuilder<TResult> ResultHandleResult<TResult>(Func<TResult, bool> resultPredicate) =>
+        Policy<TResult>.HandleResult(resultPredicate);
+
+    private static bool ShouldHandleTransient<TResult>(this OneOf<TResult, NotFound, ApiError> of) =>
+        of is { IsT0: false, IsT1: false } && of.AsT2.Transient;
 
     private static Action<DelegateResult<TResult>, ILogger> GetLogResult<TResult>(bool retry) =>
         retry ? static (result, logger) => logger.RetryLogResult(result) : static (result, logger) => logger.BreakLogResult(result);

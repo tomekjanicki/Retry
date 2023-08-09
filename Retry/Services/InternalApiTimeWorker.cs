@@ -1,11 +1,14 @@
-﻿namespace Retry.Services;
+﻿using Polly.CircuitBreaker;
+using Retry.Extensions;
 
-public sealed class InternalApiWorker : BackgroundService
+namespace Retry.Services;
+
+public sealed class InternalApiTimeWorker : BackgroundService
 {
     private readonly IInternalApiClient _internalApiClient;
-    private readonly ILogger<InternalApiWorker> _logger;
+    private readonly ILogger<InternalApiTimeWorker> _logger;
 
-    public InternalApiWorker(IInternalApiClient internalApiClient, ILogger<InternalApiWorker> logger)
+    public InternalApiTimeWorker(IInternalApiClient internalApiClient, ILogger<InternalApiTimeWorker> logger)
     {
         _internalApiClient = internalApiClient;
         _logger = logger;
@@ -21,6 +24,14 @@ public sealed class InternalApiWorker : BackgroundService
                 var result = await _internalApiClient.GetTimeAsString(true, stoppingToken).ConfigureAwait(false);
                 _logger.LogInformation("Returned: {Result}.", result);
                 _logger.LogInformation("End loop.");
+            }
+            catch (HttpRequestException e) when (e.ShouldHandleTransientHttpRequestException())
+            {
+                _logger.LogError("HttpRequestException {StatusCode}.", e.StatusCode);
+            }
+            catch (BrokenCircuitException)
+            {
+                _logger.LogError("BrokenCircuitException.");
             }
             catch (Exception e)
             {

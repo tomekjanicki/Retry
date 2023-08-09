@@ -1,4 +1,7 @@
-﻿namespace Retry.Services;
+﻿using Polly.CircuitBreaker;
+using Retry.Extensions;
+
+namespace Retry.Services;
 
 public sealed class ExternalApiTimeWorker : BackgroundService
 {
@@ -18,9 +21,17 @@ public sealed class ExternalApiTimeWorker : BackgroundService
             try
             {
                 _logger.LogInformation("Start loop.");
-                var result = await _api.GetTimeAsString(false, stoppingToken).ConfigureAwait(false);
+                var result = await _api.GetTimeAsString(true, stoppingToken).ConfigureAwait(false);
                 _logger.LogInformation("Returned: {Result}.", result);
                 _logger.LogInformation("End loop.");
+            }
+            catch (HttpRequestException e) when (e.ShouldHandleTransientHttpRequestException())
+            {
+                _logger.LogError("HttpRequestException {StatusCode}.", e.StatusCode);
+            }
+            catch (BrokenCircuitException)
+            {
+                _logger.LogError("BrokenCircuitException.");
             }
             catch (Exception e)
             {
