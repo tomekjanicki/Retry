@@ -14,8 +14,7 @@ public static class HttpClientResiliencyHelper
 
     public static IAsyncPolicy<HttpResponseMessage> GetSingleInstanceOfRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message)
     {
-        var uri = message.RequestUri ?? throw new InvalidOperationException("Uri is null.");
-        var key = $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
+        var key = GetKey(message);
         lock (Policies)
         {
             if (Policies.TryGetValue(key, out var value))
@@ -27,6 +26,13 @@ public static class HttpClientResiliencyHelper
 
             return policy;
         }
+    }
+
+    private static string GetKey(HttpRequestMessage message)
+    {
+        var uri = message.RequestUri ?? throw new InvalidOperationException("Uri is null.");
+
+        return $"{uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
     }
 
     private static IAsyncPolicy<HttpResponseMessage> GetRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration) =>

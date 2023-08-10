@@ -45,9 +45,9 @@ public sealed class ExternalApiClient : IExternalApiClient
 
             return await response.HandleWithNotFound<string, User>(static user => $"{user.FirstName} {user.LastName}", cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException e) when(e.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused())
+        catch (HttpRequestException e) when (e.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused())
         {
-            return new ApiError(e.Message, true, null);
+            return Constants.ApiNotAvailable;
         }
     }
 
