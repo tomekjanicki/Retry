@@ -9,7 +9,6 @@ namespace Retry.Extensions;
 
 public static class HttpResponseMessageExtensions
 {
-
     public static async Task<OneOf<TResult, NotFound, ApiError>> HandleWithNotFound<TResult, TIntermediateResult>(
         this HttpResponseMessage message, Func<TIntermediateResult, TResult> converter, CancellationToken cancellationToken)
     {
