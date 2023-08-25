@@ -21,7 +21,7 @@ public sealed class ExternalApiClient : IExternalApiClient
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var response = await httpClient.GetAsync(string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await response.EnsureSuccessStatusCodeWithContentInfo(cancellationToken).ConfigureAwait(false);
 
         return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -30,7 +30,7 @@ public sealed class ExternalApiClient : IExternalApiClient
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var response = await httpClient.GetAsync(string.Format(GetItemsUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await response.EnsureSuccessStatusCodeWithContentInfo(cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<string>>(Constants.CamelCaseJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 
         return result ?? Array.Empty<string>();

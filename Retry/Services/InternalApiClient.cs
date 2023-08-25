@@ -28,7 +28,7 @@ public sealed class InternalApiClient : IInternalApiClient
         var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty));
         request.SetPolicyExecutionContext(_context);
         var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await response.EnsureSuccessStatusCodeWithContentInfo(cancellationToken).ConfigureAwait(false);
 
         return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
     }

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using OneOf;
 using OneOf.Types;
 using Retry.Resiliency;
@@ -30,6 +31,33 @@ public static class HttpResponseMessageExtensions
 
                 return new ApiError(content, message.StatusCode.IsTransientHttpStatusCode(), message.StatusCode);
             }
+        }
+    }
+
+    public static async Task EnsureSuccessStatusCodeWithContentInfo(this HttpResponseMessage httpResponseMessage, CancellationToken token)
+    {
+        if (!httpResponseMessage.IsSuccessStatusCode)
+        {
+            var content = await httpResponseMessage.GetContent(token).ConfigureAwait(false);
+            var messageBuilder = new StringBuilder();
+            messageBuilder.Append($"Request failed. Status code: {httpResponseMessage.StatusCode}, Reason: {httpResponseMessage.ReasonPhrase}");
+            if (content != string.Empty)
+            {
+                messageBuilder.Append($", Additional info: {content}");
+            }
+            throw new HttpRequestException(messageBuilder.ToString(), null, httpResponseMessage.StatusCode);
+        }
+    }
+
+    private static async Task<string> GetContent(this HttpResponseMessage httpResponseMessage, CancellationToken token)
+    {
+        try
+        {
+            return await httpResponseMessage.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+        }
+        catch
+        {
+            return string.Empty;
         }
     }
 }
