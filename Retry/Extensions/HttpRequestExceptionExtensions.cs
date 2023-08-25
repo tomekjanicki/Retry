@@ -1,13 +1,25 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
+using ApiClient.Extensions;
 
 namespace Retry.Extensions;
 
 public static class HttpRequestExceptionExtensions
 {
-    public static bool ShouldHandleTransientHttpRequestException(this HttpRequestException httpRequestException) =>
-        httpRequestException.StatusCode is not null && httpRequestException.StatusCode.Value.IsTransientHttpStatusCode()
-        || httpRequestException.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused();
+    public static bool ShouldHandleTransientHttpRequestException(this HttpRequestException httpRequestException)
+    {
+        var statusCode = httpRequestException.GetHttpStatusCode();
+
+        return statusCode is not null && statusCode.Value.IsTransientHttpStatusCode()
+               || httpRequestException.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused();
+    }
 
     public static bool ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(this HttpRequestException httpRequestException) =>
-        httpRequestException.StatusCode is null && httpRequestException.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionRefused };
+        httpRequestException.GetHttpStatusCode() is null && httpRequestException.InnerException is SocketException
+        {
+            SocketErrorCode: SocketError.ConnectionRefused
+        };
+
+    public static HttpStatusCode? GetHttpStatusCode(this HttpRequestException httpRequestException) => 
+        httpRequestException.StatusCode ?? httpRequestException.GetStatusCode();
 }
