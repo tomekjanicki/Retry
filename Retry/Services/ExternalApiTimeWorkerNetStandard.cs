@@ -1,14 +1,15 @@
-﻿using Polly.CircuitBreaker;
+﻿using ApiClient.Services;
+using Polly.CircuitBreaker;
 using Retry.Extensions;
 
 namespace Retry.Services;
 
-public sealed class ExternalApiTimeWorker : BackgroundService
+public sealed class ExternalApiTimeWorkerNetStandard : BackgroundService
 {
-    private readonly IExternalApiClient _api;
+    private readonly IExternalApiClientNetStandard _api;
     private readonly ILogger<ExternalApiTimeWorker> _logger;
 
-    public ExternalApiTimeWorker(IExternalApiClient api, ILogger<ExternalApiTimeWorker> logger)
+    public ExternalApiTimeWorkerNetStandard(IExternalApiClientNetStandard api, ILogger<ExternalApiTimeWorker> logger)
     {
         _api = api;
         _logger = logger;
