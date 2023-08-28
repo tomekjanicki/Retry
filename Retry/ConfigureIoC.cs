@@ -18,21 +18,25 @@ public static class ConfigureIoC
         //services.AddHostedService<ExternalApiUserWorker>();
         services.AddWithPolicyWrapper<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, provider, logger));
         services.AddWithPolicyWrapper<IExternalApiClientNetStandard, ExternalApiClientNetStandard, WithRetryAndCircuitBreakerExternalApiClientNetStandard>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClientNetStandard(api, provider, logger));
-        services.AddHttpClient(ExternalApiClient.Name, static (provider, client) => ConfigureClient(provider, client));
-        services.AddHttpClient(ExternalApiClientNetStandard.Name, static (provider, client) => ConfigureClient(provider, client));
+        services.AddHttpClient(ExternalApiClient.Name);
+        services.AddHttpClient(ExternalApiClientNetStandard.Name);
         //services.AddHostedService<InternalApiTimeWorker>();
         //services.AddHostedService<InternalApiUserWorker>();
         services.AddHostedService<InternalApiTimeWorkerNetStandard>();
         services.AddSingleton<IInternalApiClientNetStandard, InternalApiClientNetStandard>();
         services.AddSingleton<PolicyExecutionContextDelegatingHandler>();
         services.AddSingleton<IInternalApiClient, InternalApiClient>();
-        services.AddHttpClient(InternalApiClientNetStandard.Name, static (provider, client) => ConfigureClient(provider, client))
-            .AddHttpMessageHandler(static provider => provider.GetRequiredService<PolicyExecutionContextDelegatingHandler>())
-            .AddPolicyHandler(static (provider, message) => HttpClientResiliencyHelper.GetSingleInstanceOfRetryAndCircuitBreakerAsyncPolicy(provider.GetRequiredService<IOptions<RetryAndCircuitBreakerPolicyConfiguration>>().Value, message));
-        services.AddHttpClient(InternalApiClient.Name, static (provider, client) => ConfigureClient(provider, client))
-            .AddHttpMessageHandler(static provider => provider.GetRequiredService<PolicyExecutionContextDelegatingHandler>())
-            .AddPolicyHandler(static (provider, message) => HttpClientResiliencyHelper.GetSingleInstanceOfRetryAndCircuitBreakerAsyncPolicy(provider.GetRequiredService<IOptions<RetryAndCircuitBreakerPolicyConfiguration>>().Value, message));
+        services.AddHttpClient(InternalApiClientNetStandard.Name).AddHandlers();
+        services.AddHttpClient(InternalApiClient.Name).AddHandlers();
     }
+
+    private static IHttpClientBuilder AddHttpClient(this IServiceCollection services, string name) =>
+        services.AddHttpClient(name, static (provider, client) => ConfigureClient(provider, client));
+
+    private static void AddHandlers(this IHttpClientBuilder clientBuilder) =>
+        clientBuilder
+            .AddHttpMessageHandler(static provider => provider.GetRequiredService<PolicyExecutionContextDelegatingHandler>())
+            .AddPolicyHandler(static (provider, message) => HttpClientResiliencyHelper.GetSingleInstanceOfRetryAndCircuitBreakerAsyncPolicy(provider.GetRequiredService<IOptions<RetryAndCircuitBreakerPolicyConfiguration>>().Value, message));
 
     private static void ConfigureClient(IServiceProvider provider, HttpClient client) => 
         client.BaseAddress = provider.GetRequiredService<IOptions<ConfigurationSettings>>().Value.ApiUri;
