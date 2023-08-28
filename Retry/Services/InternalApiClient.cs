@@ -1,6 +1,5 @@
 ﻿using OneOf;
 using OneOf.Types;
-using Polly;
 using Polly.CircuitBreaker;
 using Retry.Extensions;
 using Retry.Resiliency;
@@ -14,19 +13,14 @@ public sealed class InternalApiClient : IInternalApiClient
     private const string GetUserFullNameByIdUrl = "/user?id={0}&mode={1}";
 
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly Context _context;
 
-    public InternalApiClient(IHttpClientFactory httpClientFactory, ILogger<InternalApiClient> logger)
-    {
+    public InternalApiClient(IHttpClientFactory httpClientFactory) => 
         _httpClientFactory = httpClientFactory;
-        _context = HttpClientResiliencyHelper.GetContext(logger);
-    }
 
     public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty));
-        request.SetPolicyExecutionContext(_context);
         var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await response.EnsureSuccessStatusCodeWithContentInfo(cancellationToken).ConfigureAwait(false);
 
@@ -39,7 +33,6 @@ public sealed class InternalApiClient : IInternalApiClient
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetUserFullNameByIdUrl, id, fail ? "fail" : string.Empty));
-            request.SetPolicyExecutionContext(_context);
             var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             return await response.HandleWithNotFound<string, User>(static user => $"{user.FirstName} {user.LastName}", cancellationToken)

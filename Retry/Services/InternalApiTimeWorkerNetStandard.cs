@@ -4,12 +4,12 @@ using Retry.Extensions;
 
 namespace Retry.Services;
 
-public sealed class ExternalApiTimeWorkerNetStandard : BackgroundService
+public sealed class InternalApiTimeWorkerNetStandard : BackgroundService
 {
-    private readonly IExternalApiClientNetStandard _api;
-    private readonly ILogger<ExternalApiTimeWorkerNetStandard> _logger;
+    private readonly IInternalApiClientNetStandard _api;
+    private readonly ILogger<InternalApiTimeWorkerNetStandard> _logger;
 
-    public ExternalApiTimeWorkerNetStandard(IExternalApiClientNetStandard api, ILogger<ExternalApiTimeWorkerNetStandard> logger)
+    public InternalApiTimeWorkerNetStandard(IInternalApiClientNetStandard api, ILogger<InternalApiTimeWorkerNetStandard> logger)
     {
         _api = api;
         _logger = logger;
