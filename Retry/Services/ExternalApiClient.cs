@@ -47,7 +47,7 @@ public sealed class ExternalApiClient : IExternalApiClient
         }
         catch (HttpRequestException e) when (e.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused())
         {
-            return Constants.ApiNotAvailable;
+            return Constants.ServiceNotAvailableApiError;
         }
     }
 

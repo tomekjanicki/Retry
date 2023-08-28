@@ -18,7 +18,7 @@ public static class HttpResponseMessageExtensions
             {
                 var result = await message.Content.ReadFromJsonAsync<TIntermediateResult>(Constants.CamelCaseJsonSerializerOptions, cancellationToken).ConfigureAwait(false);
 
-                return result is null ? Constants.ResultNullError : converter(result);
+                return result is null ? Constants.ResultNullApiError : converter(result);
             }
             case HttpStatusCode.NotFound:
             {

@@ -40,7 +40,7 @@ public sealed class InternalApiClient : IInternalApiClient
         }
         catch (HttpRequestException e) when (e.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused())
         {
-            return Constants.ApiNotAvailable;
+            return Constants.ServiceNotAvailableApiError;
         }
         catch (BrokenCircuitException)
         {
