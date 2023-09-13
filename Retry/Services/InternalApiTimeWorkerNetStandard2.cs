@@ -34,9 +34,9 @@ public sealed class InternalApiTimeWorkerNetStandard2 : BackgroundService
             {
                 _logger.LogError("BrokenCircuitException.");
             }
-            catch (TaskCanceledException e)
+            catch (OperationCanceledException e)
             {
-                _logger.LogError("TaskCanceledException. Inner exception: {Inner}", e.InnerException);
+                _logger.LogError("OperationCanceledException. Inner exception: {Inner}", e.InnerException);
             }
             catch (Exception e)
             {
@@ -53,10 +53,7 @@ public sealed class InternalApiTimeWorkerNetStandard2 : BackgroundService
             var result = await _api.GetTimeAsString(false, delayInMilliseconds, token).ConfigureAwait(false);
             _logger.LogInformation("Returned: {Result}.", result);
             Thread.Sleep(2000);
-            if (token.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            token.ThrowIfCancellationRequested();
         }
     }
 }

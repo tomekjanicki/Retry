@@ -35,9 +35,9 @@ public sealed class InternalApiTimeWorkerNetStandard : BackgroundService
             {
                 _logger.LogError("BrokenCircuitException.");
             }
-            catch (TaskCanceledException e)
+            catch (OperationCanceledException e)
             {
-                _logger.LogError("TaskCanceledException. Inner exception: {Inner}", e.InnerException);
+                _logger.LogError("OperationCanceledException. Inner exception: {Inner}", e.InnerException);
             }
             catch (Exception e)
             {
