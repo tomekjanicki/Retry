@@ -29,7 +29,7 @@ public sealed class InternalApiTimeWorkerNetStandard : BackgroundService
             }
             catch (HttpRequestException e) when (e.ShouldHandleTransientHttpRequestException())
             {
-                _logger.LogError("HttpRequestException {StatusCode}.", e.GetHttpStatusCode());
+                _logger.LogError("Transient HttpRequestException {StatusCode}.", e.GetHttpStatusCode());
             }
             catch (BrokenCircuitException)
             {
