@@ -15,10 +15,15 @@ public sealed class InternalApiClientNetStandard : IInternalApiClientNetStandard
     public InternalApiClientNetStandard(IHttpClientFactory httpClientFactory) =>
         _httpClientFactory = httpClientFactory;
 
-    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)
+    public async Task<string> GetTimeAsString(bool fail, int? delayInMilliseconds, CancellationToken cancellationToken)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
-        var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty));
+        var url = string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty);
+        if (delayInMilliseconds is not null)
+        {
+            url = $"{url}&delay={delayInMilliseconds.Value}";
+        }
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await response.EnsureSuccessStatusCodeWithContentInfo().ConfigureAwait(false);
 

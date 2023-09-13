@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -24,4 +25,12 @@ public static class ControllerBaseExtensions
 
         return controllerBase.StatusCode(500, "Error");
     }
+
+    public static IActionResult GetTimeoutWithLogging(this ControllerBase controllerBase, ILogger logger, string method)
+    {
+        logger.LogError("Returning timeout from {Method}.", method);
+
+        return controllerBase.StatusCode(408, "Error");
+    }
+
 }
