@@ -4,12 +4,12 @@ using Retry.Extensions;
 
 namespace Retry.Services;
 
-public sealed class InternalApiTimeWorkerNetStandard : BackgroundService
+public sealed class InternalApiTimeWorkerNetStandard2 : BackgroundService
 {
     private readonly IInternalApiClientNetStandard _api;
-    private readonly ILogger<InternalApiTimeWorkerNetStandard> _logger;
+    private readonly ILogger<InternalApiTimeWorkerNetStandard2> _logger;
 
-    public InternalApiTimeWorkerNetStandard(IInternalApiClientNetStandard api, ILogger<InternalApiTimeWorkerNetStandard> logger)
+    public InternalApiTimeWorkerNetStandard2(IInternalApiClientNetStandard api, ILogger<InternalApiTimeWorkerNetStandard2> logger)
     {
         _api = api;
         _logger = logger;
@@ -23,8 +23,7 @@ public sealed class InternalApiTimeWorkerNetStandard : BackgroundService
             {
                 using var cts = CancellationTokenSources.Create(TimeSpan.FromSeconds(2), stoppingToken);
                 _logger.LogInformation("Start loop.");
-                var result = await _api.GetTimeAsString(false, 5000, cts.Token).ConfigureAwait(false);
-                _logger.LogInformation("Returned: {Result}.", result);
+                await ExecuteLoop(500, cts.Token).ConfigureAwait(false);
                 _logger.LogInformation("End loop.");
             }
             catch (HttpRequestException e) when (e.ShouldHandleTransientHttpRequestException())
@@ -44,6 +43,20 @@ public sealed class InternalApiTimeWorkerNetStandard : BackgroundService
                 _logger.LogError(e, "Unhandled exception in loop.");
             }
             await Task.Delay(1000, stoppingToken);
+        }
+    }
+
+    private async Task ExecuteLoop(int delayInMilliseconds, CancellationToken token)
+    {
+        for (var i = 0; i < 5; i++)
+        {
+            var result = await _api.GetTimeAsString(false, delayInMilliseconds, token).ConfigureAwait(false);
+            _logger.LogInformation("Returned: {Result}.", result);
+            Thread.Sleep(2000);
+            if (token.IsCancellationRequested)
+            {
+                throw new TaskCanceledException();
+            }
         }
     }
 }
