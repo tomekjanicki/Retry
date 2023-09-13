@@ -21,9 +21,9 @@ public sealed class InternalApiTimeWorkerNetStandard2 : BackgroundService
         {
             try
             {
-                using var cts = CancellationTokenSources.Create(TimeSpan.FromSeconds(2), stoppingToken);
+                using var cancellationTokenSource = Helper.CreateCancellationTokenSource(stoppingToken, TimeSpan.FromSeconds(2));
                 _logger.LogInformation("Start loop.");
-                await ExecuteLoop(500, cts.Token).ConfigureAwait(false);
+                await ExecuteLoop(500, cancellationTokenSource.Token).ConfigureAwait(false);
                 _logger.LogInformation("End loop.");
             }
             catch (HttpRequestException e) when (e.ShouldHandleTransientHttpRequestException())
