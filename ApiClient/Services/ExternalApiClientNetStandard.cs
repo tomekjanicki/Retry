@@ -14,7 +14,7 @@ public sealed class ExternalApiClientNetStandard : IExternalApiClientNetStandard
 
     public ExternalApiClientNetStandard(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory;
 
-    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)
+    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var response = await httpClient.GetAsync(string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);

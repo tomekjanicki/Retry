@@ -17,7 +17,7 @@ public sealed class ExternalApiClient : IExternalApiClient
 
     public ExternalApiClient(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory;
 
-    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)
+    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var response = await httpClient.GetAsync(string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);
@@ -26,7 +26,7 @@ public sealed class ExternalApiClient : IExternalApiClient
         return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyCollection<string>> GetItems(bool fail, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<string>> GetItems(bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var response = await httpClient.GetAsync(string.Format(GetItemsUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);
@@ -36,7 +36,7 @@ public sealed class ExternalApiClient : IExternalApiClient
         return result ?? Array.Empty<string>();
     }
 
-    public async Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken)
+    public async Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         try

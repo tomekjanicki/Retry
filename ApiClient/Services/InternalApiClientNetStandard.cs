@@ -15,7 +15,7 @@ public sealed class InternalApiClientNetStandard : IInternalApiClientNetStandard
     public InternalApiClientNetStandard(IHttpClientFactory httpClientFactory) =>
         _httpClientFactory = httpClientFactory;
 
-    public async Task<string> GetTimeAsString(bool fail, int? delayInMilliseconds, CancellationToken cancellationToken)
+    public async Task<string> GetTimeAsString(bool fail, int? delayInMilliseconds, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var url = string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty);

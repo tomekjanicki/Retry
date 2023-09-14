@@ -23,7 +23,9 @@ public static class ConfigureIoC
         //services.AddHostedService<InternalApiTimeWorker>();
         //services.AddHostedService<InternalApiUserWorker>();
         //services.AddHostedService<InternalApiTimeWorkerNetStandard>();
-        services.AddHostedService<InternalApiTimeWorkerNetStandard2>();
+        //services.AddHostedService<InternalApiTimeWorkerNetStandard2>();
+        //services.AddHostedService<InternalApiTimeWorkerNetStandard3>();
+        services.AddHostedService<InternalApiTimeWorkerNetStandard4>();
         services.AddSingleton<IInternalApiClientNetStandard, InternalApiClientNetStandard>();
         services.AddTransient<PolicyExecutionContextDelegatingHandler>();
         services.AddSingleton<IInternalApiClient, InternalApiClient>();

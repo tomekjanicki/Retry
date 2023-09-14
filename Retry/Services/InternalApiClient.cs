@@ -17,7 +17,7 @@ public sealed class InternalApiClient : IInternalApiClient
     public InternalApiClient(IHttpClientFactory httpClientFactory) => 
         _httpClientFactory = httpClientFactory;
 
-    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken)
+    public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty));
@@ -27,7 +27,7 @@ public sealed class InternalApiClient : IInternalApiClient
         return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken)
+    public async Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
         try

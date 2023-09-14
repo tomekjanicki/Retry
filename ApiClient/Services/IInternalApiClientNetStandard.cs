@@ -5,5 +5,5 @@ namespace ApiClient.Services;
 
 public interface IInternalApiClientNetStandard
 {
-    Task<string> GetTimeAsString(bool fail, int? delayInMilliseconds, CancellationToken cancellationToken);
+    Task<string> GetTimeAsString(bool fail, int? delayInMilliseconds, CancellationToken cancellationToken = default);
 }

@@ -20,12 +20,12 @@ public sealed class WithRetryAndCircuitBreakerExternalApiClient : IExternalApiCl
         _getUserFullNameByIdPolicyAndHandler = provider.GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicyAndHandler<string>(logger);
     }
 
-    public Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken) =>
+    public Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default) =>
         _getTimeAsStringPolicyAndHandler.ExecuteAsync((fail, _api), static (p, token) => p._api.GetTimeAsString(p.fail, token), cancellationToken);
 
-    public Task<IReadOnlyCollection<string>> GetItems(bool fail, CancellationToken cancellationToken) =>
+    public Task<IReadOnlyCollection<string>> GetItems(bool fail, CancellationToken cancellationToken = default) =>
         _getItemsPolicyAndHandler.ExecuteAsync((fail, _api), static (p, token) => p._api.GetItems(p.fail, token), cancellationToken);
 
-    public Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken) =>
+    public Task<OneOf<string, NotFound, ApiError>> GetUserFullNameById(int id, bool fail, CancellationToken cancellationToken = default) =>
         _getUserFullNameByIdPolicyAndHandler.ExecuteAsResult((fail, _api, id), Constants.CircuitOpenApiError, PolicyAndHandlerWrapperExtensions.CircuitOpenPredicate, static (p, token) => p._api.GetUserFullNameById(p.id, p.fail, token), cancellationToken);
 }

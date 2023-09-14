@@ -5,5 +5,5 @@ namespace ApiClient.Services;
 
 public interface IExternalApiClientNetStandard
 {
-    Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken);
+    Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default);
 }
