@@ -16,6 +16,9 @@ public static class LoggerExtensions
         logger.LogError("Error during retry. {Result}", result.Result);
     }
 
+    public static void RetryLogResult(this ILogger logger, Exception result) =>
+        logger.LogError(result, "Exception during retry.");
+
     public static void BreakLogResult<TResult>(this ILogger logger, DelegateResult<TResult> result)
     {
         if (result.Exception is not null)
@@ -27,9 +30,6 @@ public static class LoggerExtensions
 
         logger.LogError("Error during break. {Result}", result.Result);
     }
-
-    public static void RetryLogResult(this ILogger logger, Exception result) => 
-        logger.LogError(result, "Exception during retry.");
 
     public static void BreakLogResult(this ILogger logger, Exception result) => 
         logger.LogError(result, "Exception during break.");

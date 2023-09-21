@@ -13,18 +13,22 @@ public static class ConfigureIoC
     {
         services.AddSingleton<PolicyAndHandlerWrapperProvider>();
         services.AddOptions<ConfigurationSettings>().Bind(context.Configuration.GetSection(ConfigurationSettings.SectionName));
+#pragma warning disable S125
         //services.AddHostedService<ExternalApiTimeWorkerNetStandard>();
         //services.AddHostedService<ExternalApiTimeWorker>();
         //services.AddHostedService<ExternalApiUserWorker>();
+#pragma warning restore S125
         services.AddWithPolicyWrapper<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, provider, logger));
         services.AddWithPolicyWrapper<IExternalApiClientNetStandard, ExternalApiClientNetStandard, WithRetryAndCircuitBreakerExternalApiClientNetStandard>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClientNetStandard(api, provider, logger));
         services.AddHttpClient(ExternalApiClient.Name);
         services.AddHttpClient(ExternalApiClientNetStandard.Name);
+#pragma warning disable S125
         //services.AddHostedService<InternalApiTimeWorker>();
         //services.AddHostedService<InternalApiUserWorker>();
         //services.AddHostedService<InternalApiTimeWorkerNetStandard>();
         //services.AddHostedService<InternalApiTimeWorkerNetStandard2>();
         //services.AddHostedService<InternalApiTimeWorkerNetStandard3>();
+#pragma warning restore S125
         services.AddHostedService<InternalApiTimeWorkerNetStandard4>();
         services.AddSingleton<IInternalApiClientNetStandard, InternalApiClientNetStandard>();
         services.AddTransient<PolicyExecutionContextDelegatingHandler>();

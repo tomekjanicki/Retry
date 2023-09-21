@@ -47,6 +47,14 @@ public static class ResiliencyHelper
         return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
     }
 
+    public static IAsyncPolicy GetRetryAndCircuitBreakerExceptionAsyncPolicy<TException>(RetryAndCircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
+        where TException : Exception
+    {
+        var builder = HandleException(predicate);
+
+        return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
+    }
+
     public static IAsyncPolicy<TResult> GetCircuitBreakerExceptionAsyncPolicy<TResult, TException>(CircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
         where TException : Exception
     {
@@ -61,14 +69,6 @@ public static class ResiliencyHelper
         var builder = HandleException(predicate);
 
         return builder.GetCircuitBreakerAsyncPolicy(configuration);
-    }
-
-    public static IAsyncPolicy GetRetryAndCircuitBreakerExceptionAsyncPolicy<TException>(RetryAndCircuitBreakerPolicyConfiguration configuration, Func<TException, bool> predicate)
-        where TException : Exception
-    {
-        var builder = HandleException(predicate);
-
-        return builder.GetRetryAndCircuitBreakerAsyncPolicy(configuration);
     }
 
     private static PolicyBuilder HandleException<TException>(Func<TException, bool> predicate)

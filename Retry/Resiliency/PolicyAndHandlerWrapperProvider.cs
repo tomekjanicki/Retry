@@ -26,6 +26,15 @@ public sealed class PolicyAndHandlerWrapperProvider
         return new AsyncPolicyAndHandlerWrapper<TResult>(policy, handler);
     }
 
+    public AsyncPolicyAndHandlerWrapper GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<TException>(ILogger logger, Func<TException, bool> predicate)
+        where TException : Exception
+    {
+        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy(_configuration, predicate);
+        var handler = ResiliencyHelper.GetHandler(logger);
+
+        return new AsyncPolicyAndHandlerWrapper(policy, handler);
+    }
+
     public AsyncPolicyAndHandlerWrapper<TResult> GetCircuitBreakerExceptionAsyncPolicyAndHandler<TResult,
         TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
@@ -40,15 +49,6 @@ public sealed class PolicyAndHandlerWrapperProvider
         where TException : Exception
     {
         var policy = ResiliencyHelper.GetCircuitBreakerExceptionAsyncPolicy(_configuration.CircuitBreakerPolicy, predicate);
-        var handler = ResiliencyHelper.GetHandler(logger);
-
-        return new AsyncPolicyAndHandlerWrapper(policy, handler);
-    }
-
-    public AsyncPolicyAndHandlerWrapper GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<TException>(ILogger logger, Func<TException, bool> predicate)
-        where TException : Exception
-    {
-        var policy = ResiliencyHelper.GetRetryAndCircuitBreakerExceptionAsyncPolicy(_configuration, predicate);
         var handler = ResiliencyHelper.GetHandler(logger);
 
         return new AsyncPolicyAndHandlerWrapper(policy, handler);

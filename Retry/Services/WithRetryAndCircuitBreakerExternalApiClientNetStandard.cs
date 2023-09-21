@@ -14,6 +14,6 @@ public sealed class WithRetryAndCircuitBreakerExternalApiClientNetStandard : IEx
         _getTimeAsStringPolicyAndHandler = provider.GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandler<string>(logger);
     }
 
-    public Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken) =>
+    public Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default) =>
         _getTimeAsStringPolicyAndHandler.ExecuteAsync((fail, _api), static (p, token) => p._api.GetTimeAsString(p.fail, token), cancellationToken);
 }
