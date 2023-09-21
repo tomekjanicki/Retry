@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Globalization;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using OneOf;
@@ -39,10 +40,10 @@ public static class HttpResponseMessageExtensions
         {
             var content = await httpResponseMessage.GetContent(token).ConfigureAwait(false);
             var messageBuilder = new StringBuilder();
-            messageBuilder.Append($"Request failed. Status code: {httpResponseMessage.StatusCode}, Reason: {httpResponseMessage.ReasonPhrase}");
+            messageBuilder.Append(CultureInfo.InvariantCulture, $"Request failed. Status code: {httpResponseMessage.StatusCode}, Reason: {httpResponseMessage.ReasonPhrase}");
             if (content != string.Empty)
             {
-                messageBuilder.Append($", Additional info: {content}");
+                messageBuilder.Append(CultureInfo.InvariantCulture, $", Additional info: {content}");
             }
             throw new HttpRequestException(messageBuilder.ToString(), null, httpResponseMessage.StatusCode);
         }

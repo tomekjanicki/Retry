@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Globalization;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using ApiClient.Extensions;
@@ -17,7 +18,7 @@ public sealed class ExternalApiClientNetStandard : IExternalApiClientNetStandard
     public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
-        var response = await httpClient.GetAsync(string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);
+        var response = await httpClient.GetAsync(string.Format(CultureInfo.InvariantCulture, GetTimeAsStringUrl, fail ? "fail" : string.Empty), cancellationToken).ConfigureAwait(false);
         await response.EnsureSuccessStatusCodeWithContentInfo().ConfigureAwait(false);
 
         return await response.Content.ReadAsStringAsync().ConfigureAwait(false);

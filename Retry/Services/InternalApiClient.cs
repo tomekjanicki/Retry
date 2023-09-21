@@ -3,6 +3,7 @@ using OneOf.Types;
 using Polly.CircuitBreaker;
 using Retry.Extensions;
 using Retry.Resiliency;
+using System.Globalization;
 
 namespace Retry.Services;
 
@@ -20,7 +21,7 @@ public sealed class InternalApiClient : IInternalApiClient
     public async Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
-        var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty));
+        var request = new HttpRequestMessage(HttpMethod.Get, string.Format(CultureInfo.InvariantCulture, GetTimeAsStringUrl, fail ? "fail" : string.Empty));
         var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await response.EnsureSuccessStatusCodeWithContentInfo(cancellationToken).ConfigureAwait(false);
 
@@ -32,7 +33,7 @@ public sealed class InternalApiClient : IInternalApiClient
         var httpClient = _httpClientFactory.CreateClient(Name);
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, string.Format(GetUserFullNameByIdUrl, id, fail ? "fail" : string.Empty));
+            var request = new HttpRequestMessage(HttpMethod.Get, string.Format(CultureInfo.InvariantCulture, GetUserFullNameByIdUrl, id, fail ? "fail" : string.Empty));
             var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             return await response.HandleWithNotFound<string, User>(static user => $"{user.FirstName} {user.LastName}", cancellationToken)

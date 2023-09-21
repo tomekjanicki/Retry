@@ -22,7 +22,7 @@ public sealed class InternalApiTimeWorkerNetStandard4 : BackgroundService
             try
             {
                 _logger.LogInformation("Start loop.");
-                using var cancellationTokenSource = Helper.CreateCancellationTokenSource(stoppingToken, TimeSpan.FromSeconds(2));
+                using var cancellationTokenSource = Helper.CreateCancellationTokenSource(TimeSpan.FromSeconds(2), stoppingToken);
                 await Execute(3000).WaitAsync(cancellationTokenSource.Token).ConfigureAwait(false);
                 _logger.LogInformation("End loop.");
             }

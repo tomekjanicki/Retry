@@ -1,4 +1,5 @@
-﻿using ApiClient.Extensions;
+﻿using System.Globalization;
+using ApiClient.Extensions;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ public sealed class InternalApiClientNetStandard : IInternalApiClientNetStandard
     public async Task<string> GetTimeAsString(bool fail, int? delayInMilliseconds, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClient(Name);
-        var url = string.Format(GetTimeAsStringUrl, fail ? "fail" : string.Empty);
+        var url = string.Format(CultureInfo.InvariantCulture, GetTimeAsStringUrl, fail ? "fail" : string.Empty);
         if (delayInMilliseconds is not null)
         {
             url = $"{url}&delay={delayInMilliseconds.Value}";
