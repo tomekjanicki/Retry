@@ -6,9 +6,9 @@ namespace Retry.Services;
 public sealed class WithRetryAndCircuitBreakerExternalApiClientNetStandard : IExternalApiClientNetStandard
 {
     private readonly IExternalApiClientNetStandard _api;
-    private readonly AsyncPolicyAndHandlerWrapper<string> _getTimeAsStringPolicyAndHandler;
+    private readonly ResiliencePipelineWrapper<string> _getTimeAsStringPolicyAndHandler;
 
-    public WithRetryAndCircuitBreakerExternalApiClientNetStandard(IExternalApiClientNetStandard api, PolicyAndHandlerWrapperProvider provider, ILogger<WithRetryAndCircuitBreakerExternalApiClientNetStandard> logger)
+    public WithRetryAndCircuitBreakerExternalApiClientNetStandard(IExternalApiClientNetStandard api, ResiliencePipelineWrapperProvider provider, ILogger<WithRetryAndCircuitBreakerExternalApiClientNetStandard> logger)
     {
         _api = api;
         _getTimeAsStringPolicyAndHandler = provider.GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandler<string>(logger);

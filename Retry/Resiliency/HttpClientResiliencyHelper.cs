@@ -1,30 +1,25 @@
 ﻿using Polly;
-using Retry.Extensions;
 using Retry.Resiliency.Models;
 
 namespace Retry.Resiliency;
 
 public static class HttpClientResiliencyHelper
 {
-    public static Context GetContext(ILogger logger) =>
-        GetContext(new Handlers<HttpResponseMessage>(logger, ResiliencyHelper.GetBreakLogResult<HttpResponseMessage>(),
-            ResiliencyHelper.GetRetryLogResult<HttpResponseMessage>()));
+    private static readonly IDictionary<string, ResiliencePipeline<HttpResponseMessage>> Pipelines = new Dictionary<string, ResiliencePipeline<HttpResponseMessage>>();
 
-    private static readonly IDictionary<string, IAsyncPolicy<HttpResponseMessage>> Policies = new Dictionary<string, IAsyncPolicy<HttpResponseMessage>>();
-
-    public static IAsyncPolicy<HttpResponseMessage> GetSingleInstanceOfRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message)
+    public static ResiliencePipeline<HttpResponseMessage> GetSingleInstanceOfRetryAndCircuitBreakerAsyncPipeline(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message)
     {
         var key = message.GetKey();
-        lock (Policies)
+        lock (Pipelines)
         {
-            if (Policies.TryGetValue(key, out var value))
+            if (Pipelines.TryGetValue(key, out var value))
             {
                 return value;
             }
-            var policy = GetRetryAndCircuitBreakerAsyncPolicy(configuration);
-            Policies.Add(key, policy);
+            var pipeline = ExtendedResiliencePipelines.GetResultIsTransientHttpStatusCodeOrShouldHandleHttpRequestExceptionSocketErrorConnectionRefusedRetryAndCircuitBreaker(configuration);
+            Pipelines.Add(key, pipeline);
 
-            return policy;
+            return pipeline;
         }
     }
 
@@ -34,15 +29,4 @@ public static class HttpClientResiliencyHelper
 
         return $"{message.Method} {uri.Scheme}://{uri.Authority}{uri.AbsolutePath}";
     }
-
-    private static IAsyncPolicy<HttpResponseMessage> GetRetryAndCircuitBreakerAsyncPolicy(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
-        ResiliencyHelper.GetRetryAndCircuitBreakerExceptionOrResultAsyncPolicy<HttpResponseMessage, HttpRequestException>(
-            static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused(),
-            static message => message.StatusCode.IsTransientHttpStatusCode(), configuration);
-
-    private static Context GetContext<TResult>(Handlers<TResult> handlers) =>
-        new(string.Empty, new Dictionary<string, object>
-        {
-            { PolicyBuilderExtensions.Handlers, handlers }
-        });
 }

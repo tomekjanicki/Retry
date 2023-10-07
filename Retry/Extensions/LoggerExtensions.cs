@@ -4,33 +4,37 @@ namespace Retry.Extensions;
 
 public static class LoggerExtensions
 {
-    public static void RetryLogResult<TResult>(this ILogger logger, DelegateResult<TResult> result)
+    public static void RetryLogResult<TResult>(this ILogger logger, Outcome<TResult> outcome)
     {
-        if (result.Exception is not null)
+        var exception = outcome.Exception;
+        if (exception is not null)
         {
-            logger.LogError(result.Exception, "Exception during retry.");
+            logger.LogError(exception, "Exception during retry.");
 
             return;
         }
-
-        logger.LogError("Error during retry. {Result}", result.Result);
+        var result = outcome.Result;
+        if (result is null)
+        {
+            return;
+        }
+        logger.LogError("Error during retry. {Result}", result);
     }
 
-    public static void RetryLogResult(this ILogger logger, Exception result) =>
-        logger.LogError(result, "Exception during retry.");
-
-    public static void BreakLogResult<TResult>(this ILogger logger, DelegateResult<TResult> result)
+    public static void OpenLogResult<TResult>(this ILogger logger, Outcome<TResult> outcome)
     {
-        if (result.Exception is not null)
+        var exception = outcome.Exception;
+        if (exception is not null)
         {
-            logger.LogError(result.Exception, "Exception during break.");
+            logger.LogError(exception, "Exception during open.");
 
             return;
         }
-
-        logger.LogError("Error during break. {Result}", result.Result);
+        var result = outcome.Result;
+        if (result is null)
+        {
+            return;
+        }
+        logger.LogError("Error during open. {Result}", result);
     }
-
-    public static void BreakLogResult(this ILogger logger, Exception result) => 
-        logger.LogError(result, "Exception during break.");
 }
