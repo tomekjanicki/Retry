@@ -17,8 +17,8 @@ public static class ConfigureIoC
         //services.AddHostedService<ExternalApiTimeWorker>();
         //services.AddHostedService<ExternalApiUserWorker>();
 #pragma warning restore S125
-        services.AddWithPolicyWrapper<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, provider, logger));
-        services.AddWithPolicyWrapper<IExternalApiClientNetStandard, ExternalApiClientNetStandard, WithRetryAndCircuitBreakerExternalApiClientNetStandard>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClientNetStandard(api, provider, logger));
+        services.AddWithResiliencePipelineWrapper<IExternalApiClient, ExternalApiClient, WithRetryAndCircuitBreakerExternalApiClient>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClient(api, provider, logger));
+        services.AddWithResiliencePipelineWrapper<IExternalApiClientNetStandard, ExternalApiClientNetStandard, WithRetryAndCircuitBreakerExternalApiClientNetStandard>(static (api, provider, logger) => new WithRetryAndCircuitBreakerExternalApiClientNetStandard(api, provider, logger));
         services.AddHttpClient(ExternalApiClient.Name);
         services.AddHttpClient(ExternalApiClientNetStandard.Name);
 #pragma warning disable S125

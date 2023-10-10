@@ -13,7 +13,7 @@ public static class ExtendedResiliencePipelines
             static message => message.StatusCode.IsTransientHttpStatusCode(),
             static exception => exception.ShouldHandleHttpRequestExceptionSocketErrorConnectionRefused());
 
-    public static ResiliencePipeline<OneOf<TResult, NotFound, ApiError>> GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicy<TResult>(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
+    public static ResiliencePipeline<OneOf<TResult, NotFound, ApiError>> GetOneOfResultWithNotFoundRetryAndCircuitBreaker<TResult>(RetryAndCircuitBreakerPolicyConfiguration configuration) =>
         GenericResiliencePipelines.GetResultHandleResultRetryAndCircuitBreaker<OneOf<TResult, NotFound, ApiError>>(configuration, static of => of.ShouldHandleTransient());
 
     private static bool ShouldHandleTransient<TResult>(this OneOf<TResult, NotFound, ApiError> of) =>

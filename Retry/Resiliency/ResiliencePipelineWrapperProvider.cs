@@ -13,47 +13,47 @@ public sealed class ResiliencePipelineWrapperProvider
     public ResiliencePipelineWrapperProvider(IOptions<ConfigurationSettings> options) =>
         _configuration = options.Value.RetryAndCircuitBreakerPolicyConfiguration;
 
-    public ResiliencePipelineWrapper<TResult> GetRetryAndCircuitBreakerTransientHttpRequestExceptionAsyncPolicyAndHandler<TResult>(ILogger logger) =>
-        GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<TResult, HttpRequestException>(logger, static exception => exception.ShouldHandleTransientHttpRequestException());
+    public ResiliencePipelineWrapper<TResult> GetRetryAndCircuitBreakerTransientHttpRequestExceptionPipelineWrapper<TResult>(ILogger logger) =>
+        GetRetryAndCircuitBreakerExceptionPipelineWrapper<TResult, HttpRequestException>(logger, static exception => exception.ShouldHandleTransientHttpRequestException());
 
-    public ResiliencePipelineWrapper<TResult> GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<TResult,
+    public ResiliencePipelineWrapper<TResult> GetRetryAndCircuitBreakerExceptionPipelineWrapper<TResult,
         TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = GenericResiliencePipelines.GetResultHandleExceptionRetryAndCircuitBreaker<TResult, TException>(_configuration, predicate);
+        var pipeline = GenericResiliencePipelines.GetResultHandleExceptionRetryAndCircuitBreaker<TResult, TException>(_configuration, predicate);
 
-        return new ResiliencePipelineWrapper<TResult>(policy, logger);
+        return new ResiliencePipelineWrapper<TResult>(pipeline, logger);
     }
 
-    public ResiliencePipelineWrapper GetRetryAndCircuitBreakerExceptionAsyncPolicyAndHandler<TException>(ILogger logger, Func<TException, bool> predicate)
+    public ResiliencePipelineWrapper GetRetryAndCircuitBreakerExceptionPipelineWrapper<TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = GenericResiliencePipelines.GetHandleExceptionRetryAndCircuitBreaker(_configuration, predicate);
+        var pipeline = GenericResiliencePipelines.GetHandleExceptionRetryAndCircuitBreaker(_configuration, predicate);
 
-        return new ResiliencePipelineWrapper(policy, logger);
+        return new ResiliencePipelineWrapper(pipeline, logger);
     }
 
-    public ResiliencePipelineWrapper<TResult> GetCircuitBreakerExceptionAsyncPolicyAndHandler<TResult,
+    public ResiliencePipelineWrapper<TResult> GetCircuitBreakerExceptionPipelineWrapper<TResult,
         TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = GenericResiliencePipelines.GetResultHandleExceptionCircuitBreaker<TResult, TException>(_configuration.CircuitBreakerPolicy, predicate);
+        var pipeline = GenericResiliencePipelines.GetResultHandleExceptionCircuitBreaker<TResult, TException>(_configuration.CircuitBreakerPolicy, predicate);
 
-        return new ResiliencePipelineWrapper<TResult>(policy, logger);
+        return new ResiliencePipelineWrapper<TResult>(pipeline, logger);
     }
 
-    public ResiliencePipelineWrapper GetCircuitBreakerExceptionAsyncPolicyAndHandler<TException>(ILogger logger, Func<TException, bool> predicate)
+    public ResiliencePipelineWrapper GetCircuitBreakerExceptionPipelineWrapper<TException>(ILogger logger, Func<TException, bool> predicate)
         where TException : Exception
     {
-        var policy = GenericResiliencePipelines.GetHandleExceptionCircuitBreaker(_configuration.CircuitBreakerPolicy, predicate);
+        var pipeline = GenericResiliencePipelines.GetHandleExceptionCircuitBreaker(_configuration.CircuitBreakerPolicy, predicate);
 
-        return new ResiliencePipelineWrapper(policy, logger);
+        return new ResiliencePipelineWrapper(pipeline, logger);
     }
 
-    public ResiliencePipelineWrapper<OneOf<TResult, NotFound, ApiError>> GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicyAndHandler<TResult>(ILogger logger)
+    public ResiliencePipelineWrapper<OneOf<TResult, NotFound, ApiError>> GetRetryAndCircuitBreakerOneOfResultWithNotFoundPipelineWrapper<TResult>(ILogger logger)
     {
-        var policy = ExtendedResiliencePipelines.GetRetryAndCircuitBreakerOneOfResultWithNotFoundAsyncPolicy<TResult>(_configuration);
+        var pipeline = ExtendedResiliencePipelines.GetOneOfResultWithNotFoundRetryAndCircuitBreaker<TResult>(_configuration);
 
-        return new ResiliencePipelineWrapper<OneOf<TResult, NotFound, ApiError>>(policy, logger);
+        return new ResiliencePipelineWrapper<OneOf<TResult, NotFound, ApiError>>(pipeline, logger);
     }
 }
