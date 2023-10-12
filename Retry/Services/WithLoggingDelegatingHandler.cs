@@ -16,7 +16,7 @@ public sealed class WithLoggingDelegatingHandler : DelegatingHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var pipeline = HttpClientResiliencyHelper.GetSingleInstanceOfRetryAndCircuitBreakerAsyncPipeline(_configuration, request);
+        var pipeline = HttpClientResiliencyHelper.GetRetryAndCircuitBreakerPipeline(_configuration, request);
         var wrapper = new ResiliencePipelineWrapper<HttpResponseMessage>(pipeline, _logger);
 
         return wrapper.ExecuteAsync((request, cancellationToken, This: this), static (p, token) => p.This.SendAsyncCore(p.request, token), cancellationToken);

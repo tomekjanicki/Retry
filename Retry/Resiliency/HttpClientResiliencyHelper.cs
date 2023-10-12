@@ -7,21 +7,9 @@ public static class HttpClientResiliencyHelper
 {
     private static readonly IDictionary<string, ResiliencePipeline<HttpResponseMessage>> Pipelines = new Dictionary<string, ResiliencePipeline<HttpResponseMessage>>();
 
-    public static ResiliencePipeline<HttpResponseMessage> GetSingleInstanceOfRetryAndCircuitBreakerAsyncPipeline(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message)
-    {
-        var key = message.GetKey();
-        lock (Pipelines)
-        {
-            if (Pipelines.TryGetValue(key, out var value))
-            {
-                return value;
-            }
-            var pipeline = ExtendedResiliencePipelines.GetResultIsTransientHttpStatusCodeOrShouldHandleHttpRequestExceptionSocketErrorConnectionRefusedRetryAndCircuitBreaker(configuration);
-            Pipelines.Add(key, pipeline);
-
-            return pipeline;
-        }
-    }
+    public static ResiliencePipeline<HttpResponseMessage> GetRetryAndCircuitBreakerPipeline(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message) =>
+        PoolHelper.GetOrCreate(Pipelines, message.GetKey(), configuration, 
+            static p => ExtendedResiliencePipelines.GetResultIsTransientHttpStatusCodeOrShouldHandleHttpRequestExceptionSocketErrorConnectionRefusedRetryAndCircuitBreaker(p));
 
     private static string GetKey(this HttpRequestMessage message)
     {
