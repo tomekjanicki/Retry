@@ -11,7 +11,7 @@ public sealed class WithRetryAndCircuitBreakerExternalApiClientNetStandard : IEx
     public WithRetryAndCircuitBreakerExternalApiClientNetStandard(IExternalApiClientNetStandard api, ResiliencePipelineWrapperProvider provider, ILogger<WithRetryAndCircuitBreakerExternalApiClientNetStandard> logger)
     {
         _api = api;
-        _getTimeAsStringResiliencePipelineWrapper = provider.GetRetryAndCircuitBreakerTransientHttpRequestExceptionPipelineWrapper<string>(logger);
+        _getTimeAsStringResiliencePipelineWrapper = provider.HandleResultTransientHttpRequestExceptionRetryAndCircuitBreakerPipelineWrapper<string>(logger);
     }
 
     public Task<string> GetTimeAsString(bool fail, CancellationToken cancellationToken = default) =>

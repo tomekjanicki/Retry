@@ -15,8 +15,8 @@ public sealed class WithRetryAndCircuitBreakerExternalApiClient : IExternalApiCl
     public WithRetryAndCircuitBreakerExternalApiClient(IExternalApiClient api, ResiliencePipelineWrapperProvider provider, ILogger<WithRetryAndCircuitBreakerExternalApiClient> logger)
     {
         _api = api;
-        _getTimeAsStringResiliencePipelineWrapper = provider.GetRetryAndCircuitBreakerTransientHttpRequestExceptionPipelineWrapper<string>(logger);
-        _getItemsResiliencePipelineWrapper = provider.GetRetryAndCircuitBreakerTransientHttpRequestExceptionPipelineWrapper<IReadOnlyCollection<string>>(logger);
+        _getTimeAsStringResiliencePipelineWrapper = provider.HandleResultTransientHttpRequestExceptionRetryAndCircuitBreakerPipelineWrapper<string>(logger);
+        _getItemsResiliencePipelineWrapper = provider.HandleResultTransientHttpRequestExceptionRetryAndCircuitBreakerPipelineWrapper<IReadOnlyCollection<string>>(logger);
         _getUserFullNameByIdResiliencePipelineWrapper = provider.GetRetryAndCircuitBreakerOneOfResultWithNotFoundPipelineWrapper<string>(logger);
     }
 

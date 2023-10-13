@@ -9,7 +9,7 @@ public static class HttpClientResiliencyHelper
 
     public static ResiliencePipeline<HttpResponseMessage> GetRetryAndCircuitBreakerPipeline(RetryAndCircuitBreakerPolicyConfiguration configuration, HttpRequestMessage message) =>
         PoolHelper.GetOrCreate(Pipelines, message.GetKey(), configuration, 
-            static p => ExtendedResiliencePipelines.GetResultIsTransientHttpStatusCodeOrShouldHandleHttpRequestExceptionSocketErrorConnectionRefusedRetryAndCircuitBreaker(p));
+            static p => ExtendedResiliencePipelines.HandleResultIsTransientHttpStatusCodeOrShouldHandleHttpRequestExceptionSocketErrorConnectionRefusedRetryAndCircuitBreaker(p));
 
     private static string GetKey(this HttpRequestMessage message)
     {
